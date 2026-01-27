@@ -1,0 +1,82 @@
+package mongorepo
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"strings"
+	"time"
+
+	"github.com/bnursik/aitu-ad-final-back/internal/domain/users"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+)
+
+type UsersRepo struct {
+	col *mongo.Collection
+}
+
+func NewUsersRepo(db *mongo.Database) *UsersRepo {
+	return &UsersRepo{col: db.Collection("users")}
+}
+
+func (r *UsersRepo) EnsureIndexes(ctx context.Context) error {
+	_, err := r.col.Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys:    bson.D{{Key: "email", Value: 1}},
+		Options: options.Index().SetUnique(true).SetName("uniq_email"),
+	})
+	return err
+}
+
+type userDoc struct {
+	ID           primitive.ObjectID `bson:"_id,omitempty"`
+	Name         string             `bson:"name"`
+	Email        string             `bson:"email"`
+	PasswordHash string             `bson:"password_hash"`
+	Role         string             `bson:"role"`
+	CreatedAt    time.Time          `bson:"created_at"`
+}
+
+func (r *UsersRepo) Insert(ctx context.Context, u users.User) (users.User, error) {
+	doc := userDoc{
+		ID:           primitive.NewObjectID(),
+		Name:         u.Name,
+		Email:        u.Email,
+		PasswordHash: u.PasswordHash,
+		Role:         string(u.Role),
+		CreatedAt:    u.CreatedAt,
+	}
+
+	_, err := r.col.InsertOne(ctx, doc)
+	if err != nil {
+		if strings.Contains(err.Error(), "E11000") {
+			return users.User{}, users.ErrEmailTaken
+		}
+		return users.User{}, fmt.Errorf("insert user: %w", err)
+	}
+
+	u.ID = doc.ID.Hex()
+	return u, nil
+}
+
+func (r *UsersRepo) FindByEmail(ctx context.Context, email string) (users.User, error) {
+	var doc userDoc
+	err := r.col.FindOne(ctx, bson.M{"email": email}).Decode(&doc)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return users.User{}, users.ErrUserNotFound
+		}
+		return users.User{}, fmt.Errorf("find by email: %w", err)
+	}
+
+	return users.User{
+		ID:           doc.ID.Hex(),
+		Name:         doc.Name,
+		Email:        doc.Email,
+		PasswordHash: doc.PasswordHash,
+		Role:         users.Role(doc.Role),
+		CreatedAt:    doc.CreatedAt,
+	}, nil
+}
