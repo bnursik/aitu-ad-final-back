@@ -13,7 +13,7 @@ func NewRouter(c *app.Container) *gin.Engine {
 	corsConfig := cors.Config{
 		AllowOrigins: []string{
 			"http://localhost:3000",
-			"https://mangustad.vercel.app/",
+			"https://mangustad.vercel.app",
 		},
 		AllowMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders: []string{
