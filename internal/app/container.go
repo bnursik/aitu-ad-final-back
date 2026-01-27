@@ -16,4 +16,5 @@ type Container struct {
 	Now        func() time.Time
 	Categories *handlers.CategoriesHandler
 	JWT        *middleware.JWT
+	Products   *handlers.ProductsHandler
 }

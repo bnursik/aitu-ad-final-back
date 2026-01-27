@@ -1,5 +1,14 @@
 basePath: /
 definitions:
+  handlers.AddReviewRequest:
+    properties:
+      comment:
+        type: string
+      rating:
+        type: integer
+    required:
+    - rating
+    type: object
   handlers.CreateCategoryRequest:
     properties:
       description:
@@ -8,6 +17,24 @@ definitions:
         type: string
     required:
     - name
+    type: object
+  handlers.CreateProductRequest:
+    properties:
+      categoryId:
+        type: string
+      description:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+      stock:
+        type: integer
+    required:
+    - categoryId
+    - name
+    - price
+    - stock
     type: object
   handlers.LoginRequest:
     properties:
@@ -42,6 +69,19 @@ definitions:
         type: string
       name:
         type: string
+    type: object
+  handlers.UpdateProductRequest:
+    properties:
+      categoryId:
+        type: string
+      description:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+      stock:
+        type: integer
     type: object
 host: localhost:8080
 info:
@@ -150,6 +190,100 @@ paths:
       summary: Update category
       tags:
       - Admin Categories
+  /api/v1/admin/products:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Product
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateProductRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create product
+      tags:
+      - Admin Products
+  /api/v1/admin/products/{id}:
+    delete:
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete product
+      tags:
+      - Admin Products
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Patch
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateProductRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update product
+      tags:
+      - Admin Products
   /api/v1/categories:
     get:
       produces:
@@ -196,6 +330,141 @@ paths:
       summary: Get category by ID
       tags:
       - Categories
+  /api/v1/products:
+    get:
+      parameters:
+      - description: Category ID (ObjectId hex)
+        in: query
+        name: categoryId
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+      summary: List products
+      tags:
+      - Products
+  /api/v1/products/{id}:
+    get:
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get product by ID
+      tags:
+      - Products
+  /api/v1/products/{id}/reviews:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Review
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.AddReviewRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Add product review (auth required)
+      tags:
+      - Reviews
+  /api/v1/products/{id}/reviews/{reviewId}:
+    delete:
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Review ID
+        in: path
+        name: reviewId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete product review (auth required)
+      tags:
+      - Reviews
   /auth/login:
     post:
       consumes:

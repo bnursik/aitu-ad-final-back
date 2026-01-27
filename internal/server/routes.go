@@ -17,8 +17,21 @@ func RegisterRoutes(r *gin.Engine, c *app.Container) {
 	v1.GET("/categories", c.Categories.List)
 	v1.GET("/categories/:id", c.Categories.Get)
 
+	// public products
+	v1.GET("/products", c.Products.List)
+	v1.GET("/products/:id", c.Products.Get)
+
+	v1.POST("/products/:id/reviews", middleware.AuthRequired(c.JWT), c.Products.AddReview)
+	v1.DELETE("/products/:id/reviews/:reviewId", middleware.AuthRequired(c.JWT), c.Products.DeleteReview)
+
+	// admin products
 	admin := v1.Group("/admin")
 	admin.Use(middleware.AuthRequired(c.JWT), middleware.AdminOnly())
+
+	admin.POST("/products", c.Products.Create)
+	admin.PUT("/products/:id", c.Products.Update)
+	admin.DELETE("/products/:id", c.Products.Delete)
+
 	admin.POST("/categories", c.Categories.Create)
 	admin.PUT("/categories/:id", c.Categories.Update)
 	admin.DELETE("/categories/:id", c.Categories.Delete)
