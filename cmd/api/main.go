@@ -4,15 +4,25 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 
+	_ "github.com/bnursik/aitu-ad-final-back/docs"
+	"github.com/bnursik/aitu-ad-final-back/internal/app"
 	"github.com/bnursik/aitu-ad-final-back/internal/config"
-	"github.com/bnursik/aitu-ad-final-back/internal/db"
+	"github.com/bnursik/aitu-ad-final-back/internal/server"
 )
 
+// @title Peripherals Store API
+// @version 1.0
+// @description REST API for Computer Peripherals Store (MongoDB + Gin)
+// @host localhost:8080
+// @BasePath /
+// @schemes http
 func main() {
 	_ = godotenv.Load()
 
@@ -21,30 +31,34 @@ func main() {
 		log.Fatalf("config load: %v", err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	mongoClient, err := db.Connect(ctx, cfg.MongoURI)
+	container, err := app.Build(cfg)
 	if err != nil {
-		log.Fatalf("mongo connect: %v", err)
+		log.Fatalf("app build: %v", err)
 	}
-	defer func() {
-		_ = mongoClient.Disconnect(context.Background())
+
+	router := server.NewRouter(container)
+
+	srv := &http.Server{
+		Addr:    ":" + cfg.Port,
+		Handler: router,
+	}
+
+	go func() {
+		log.Printf("listening on :%s", cfg.Port)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen: %v", err)
+		}
 	}()
 
-	_ = mongoClient.Database(cfg.DBName) // на будущее
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+	<-stop
 
-	r := gin.New()
-	r.Use(gin.Logger())
-	r.Use(gin.Recovery())
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-	// health check
-	r.GET("/api/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "ok"})
-	})
-
-	log.Printf("listening on :%s (db=%s)", cfg.Port, cfg.DBName)
-	if err := r.Run(":" + cfg.Port); err != nil {
-		log.Fatalf("server run: %v", err)
+	_ = srv.Shutdown(ctx)
+	if container.Shutdown != nil {
+		_ = container.Shutdown(ctx)
 	}
 }
