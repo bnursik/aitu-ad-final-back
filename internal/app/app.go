@@ -9,6 +9,7 @@ import (
 	"github.com/bnursik/aitu-ad-final-back/internal/http/handlers"
 	"github.com/bnursik/aitu-ad-final-back/internal/http/middleware"
 	mongorepo "github.com/bnursik/aitu-ad-final-back/internal/repository/mongo"
+	categoriessvc "github.com/bnursik/aitu-ad-final-back/internal/services/categories"
 	userssvc "github.com/bnursik/aitu-ad-final-back/internal/services/users"
 )
 
@@ -30,12 +31,19 @@ func Build(cfg *config.Config) (*Container, error) {
 	authSvc := userssvc.New(usersRepo, jwtIssuer)
 
 	authHandler := handlers.NewAuthHandler(authSvc)
+	categoriesRepo := mongorepo.NewCategoriesRepo(dbase)
+	productsCounter := mongorepo.NewProductsCounterRepo(dbase)
+	categoriesSvc := categoriessvc.New(categoriesRepo, productsCounter)
+
+	categoriesHandler := handlers.NewCategoriesHandler(categoriesSvc)
 
 	return &Container{
 		Auth: authHandler,
 		Shutdown: func(ctx context.Context) error {
 			return client.Disconnect(ctx)
 		},
-		Now: func() time.Time { return time.Now().UTC() },
+		JWT:        jwtIssuer,
+		Now:        func() time.Time { return time.Now().UTC() },
+		Categories: categoriesHandler,
 	}, nil
 }

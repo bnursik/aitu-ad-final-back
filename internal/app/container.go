@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/bnursik/aitu-ad-final-back/internal/http/handlers"
+	"github.com/bnursik/aitu-ad-final-back/internal/http/middleware"
 )
 
 type Container struct {
@@ -12,5 +13,7 @@ type Container struct {
 
 	Shutdown func(ctx context.Context) error
 
-	Now func() time.Time
+	Now        func() time.Time
+	Categories *handlers.CategoriesHandler
+	JWT        *middleware.JWT
 }

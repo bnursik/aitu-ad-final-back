@@ -14,14 +14,14 @@ type Config struct {
 
 func Load() (*Config, error) {
 	cfg := &Config{
-		MongoURI:  os.Getenv("MONGO_URI"),
+		MongoURI:  os.Getenv("MONGODB_URI"),
 		DBName:    os.Getenv("DB_NAME"),
 		JWTSecret: os.Getenv("JWT_SECRET"),
 		Port:      os.Getenv("PORT"),
 	}
 
 	if cfg.MongoURI == "" {
-		return nil, fmt.Errorf("MONGO_URI is required")
+		return nil, fmt.Errorf("MONGODB_URI is required")
 	}
 	if cfg.DBName == "" {
 		return nil, fmt.Errorf("DB_NAME is required")
