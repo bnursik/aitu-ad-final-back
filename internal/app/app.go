@@ -10,6 +10,7 @@ import (
 	"github.com/bnursik/aitu-ad-final-back/internal/http/middleware"
 	mongorepo "github.com/bnursik/aitu-ad-final-back/internal/repository/mongo"
 	categoriessvc "github.com/bnursik/aitu-ad-final-back/internal/services/categories"
+	orderssvc "github.com/bnursik/aitu-ad-final-back/internal/services/orders"
 	productssvc "github.com/bnursik/aitu-ad-final-back/internal/services/products"
 	userssvc "github.com/bnursik/aitu-ad-final-back/internal/services/users"
 )
@@ -41,6 +42,10 @@ func Build(cfg *config.Config) (*Container, error) {
 	productsSvc := productssvc.New(productsRepo)
 	productsHandler := handlers.NewProductsHandler(productsSvc)
 
+	ordersRepo := mongorepo.NewOrdersRepo(dbase)
+	ordersSvc := orderssvc.New(ordersRepo)
+	ordersHandler := handlers.NewOrdersHandler(ordersSvc)
+
 	return &Container{
 		Auth: authHandler,
 		Shutdown: func(ctx context.Context) error {
@@ -50,5 +55,6 @@ func Build(cfg *config.Config) (*Container, error) {
 		Now:        func() time.Time { return time.Now().UTC() },
 		Categories: categoriesHandler,
 		Products:   productsHandler,
+		Orders:     ordersHandler,
 	}, nil
 }

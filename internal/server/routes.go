@@ -13,6 +13,12 @@ import (
 func RegisterRoutes(r *gin.Engine, c *app.Container) {
 	v1 := r.Group("/api/v1")
 
+	v1.GET("/health", func(ctx *gin.Context) {
+		ctx.JSON(http.StatusOK, gin.H{"status": "ok"})
+	})
+
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
 	// public
 	v1.GET("/categories", c.Categories.List)
 	v1.GET("/categories/:id", c.Categories.Get)
@@ -23,6 +29,13 @@ func RegisterRoutes(r *gin.Engine, c *app.Container) {
 
 	v1.POST("/products/:id/reviews", middleware.AuthRequired(c.JWT), c.Products.AddReview)
 	v1.DELETE("/products/:id/reviews/:reviewId", middleware.AuthRequired(c.JWT), c.Products.DeleteReview)
+
+	// orders: auth required (user + admin)
+	ordersGroup := v1.Group("/orders")
+	ordersGroup.Use(middleware.AuthRequired(c.JWT))
+	ordersGroup.POST("", c.Orders.Create)
+	ordersGroup.GET("", c.Orders.List)
+	ordersGroup.GET("/:id", c.Orders.Get)
 
 	// admin products
 	admin := v1.Group("/admin")
@@ -36,11 +49,7 @@ func RegisterRoutes(r *gin.Engine, c *app.Container) {
 	admin.PUT("/categories/:id", c.Categories.Update)
 	admin.DELETE("/categories/:id", c.Categories.Delete)
 
-	v1.GET("/health", func(ctx *gin.Context) {
-		ctx.JSON(http.StatusOK, gin.H{"status": "ok"})
-	})
-
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	admin.PUT("/orders/:id/status", c.Orders.UpdateStatus)
 
 	v1.POST("/auth/register", c.Auth.Register)
 	v1.POST("/auth/login", c.Auth.Login)

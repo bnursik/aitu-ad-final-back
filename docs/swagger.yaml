@@ -18,6 +18,23 @@ definitions:
     required:
     - name
     type: object
+  handlers.CreateOrderRequest:
+    properties:
+      items:
+        items:
+          properties:
+            productId:
+              type: string
+            quantity:
+              type: integer
+          required:
+          - productId
+          - quantity
+          type: object
+        type: array
+    required:
+    - items
+    type: object
   handlers.CreateProductRequest:
     properties:
       categoryId:
@@ -69,6 +86,13 @@ definitions:
         type: string
       name:
         type: string
+    type: object
+  handlers.UpdateOrderStatusRequest:
+    properties:
+      status:
+        type: string
+    required:
+    - status
     type: object
   handlers.UpdateProductRequest:
     properties:
@@ -190,6 +214,57 @@ paths:
       summary: Update category
       tags:
       - Admin Categories
+  /api/v1/admin/orders/{id}/status:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Status
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateOrderStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update order status (admin only)
+      tags:
+      - Admin Orders
   /api/v1/admin/products:
     post:
       consumes:
@@ -330,6 +405,97 @@ paths:
       summary: Get category by ID
       tags:
       - Categories
+  /api/v1/orders:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: 'List orders (user: own, admin: all)'
+      tags:
+      - Orders
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Order
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create order (auth required)
+      tags:
+      - Orders
+  /api/v1/orders/{id}:
+    get:
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: 'Get order by ID (user: own, admin: any)'
+      tags:
+      - Orders
   /api/v1/products:
     get:
       parameters:
