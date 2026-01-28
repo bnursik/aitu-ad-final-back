@@ -53,4 +53,6 @@ func RegisterRoutes(r *gin.Engine, c *app.Container) {
 
 	v1.POST("/auth/register", c.Auth.Register)
 	v1.POST("/auth/login", c.Auth.Login)
+	admin.POST("/auth/admin/register", c.Auth.AdminRegister)
+
 }

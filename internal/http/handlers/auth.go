@@ -26,7 +26,6 @@ type LoginRequest struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
 }
-
 // Register godoc
 // @Summary Register new user
 // @Description Create new account and return JWT token
@@ -95,3 +94,44 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"access_token": token, "user": user})
 }
+
+// Register godoc
+// @Summary Register new admin
+// @Description Create new account and return JWT token
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param body body RegisterRequest true "Register data"
+// @Success 201 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Failure 409 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /auth/register [post]
+func (h *AuthHandler) AdminRegister(c *gin.Context) {
+	var req RegisterRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
+		return
+	}
+
+	token, user, err := h.svc.AdminRegister(c.Request.Context(), req.Name, req.Email, req.Password)
+	if err != nil {
+		switch {
+		case errors.Is(err, users.ErrEmailTaken):
+			c.JSON(http.StatusConflict, gin.H{"error": "email already taken"})
+		case errors.Is(err, users.ErrInvalidEmail), errors.Is(err, users.ErrInvalidPassword):
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		case err.Error() == "invalid name":
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid name"})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"access_token": token, "user": user})
+}
+
+
+
+
