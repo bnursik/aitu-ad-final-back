@@ -9,6 +9,13 @@ definitions:
     required:
     - rating
     type: object
+  handlers.AddToWishlistRequest:
+    properties:
+      product_id:
+        type: string
+    required:
+    - product_id
+    type: object
   handlers.CreateCategoryRequest:
     properties:
       description:
@@ -52,6 +59,23 @@ definitions:
     - name
     - price
     - stock
+    type: object
+  handlers.DateRangeRequest:
+    properties:
+      end_date:
+        type: string
+      start_date:
+        type: string
+    required:
+    - end_date
+    - start_date
+    type: object
+  handlers.FindOrderByIDRequest:
+    properties:
+      order_id:
+        type: string
+    required:
+    - order_id
     type: object
   handlers.LoginRequest:
     properties:
@@ -106,6 +130,45 @@ definitions:
         type: number
       stock:
         type: integer
+    type: object
+  handlers.YearRequest:
+    properties:
+      year:
+        type: integer
+    required:
+    - year
+    type: object
+  statistics.ProductStatistics:
+    properties:
+      average_rating:
+        type: number
+      out_of_stock:
+        type: integer
+      total_categories:
+        type: integer
+      total_products:
+        type: integer
+      total_reviews:
+        type: integer
+      total_stock:
+        type: integer
+    type: object
+  statistics.SalesStatistics:
+    properties:
+      average_order:
+        type: number
+      cancelled_orders:
+        type: integer
+      delivered_orders:
+        type: integer
+      pending_orders:
+        type: integer
+      shipped_orders:
+        type: integer
+      total_orders:
+        type: integer
+      total_revenue:
+        type: number
     type: object
 host: localhost:8080
 info:
@@ -265,6 +328,52 @@ paths:
       summary: Update order status (admin only)
       tags:
       - Admin Orders
+  /api/v1/admin/orders/find:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Order ID
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.FindOrderByIDRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Find order by ID (admin only)
+      tags:
+      - Admin Orders
   /api/v1/admin/products:
     post:
       consumes:
@@ -359,6 +468,210 @@ paths:
       summary: Update product
       tags:
       - Admin Products
+  /api/v1/admin/statistics/products:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/statistics.ProductStatistics'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all products statistics (admin only)
+      tags:
+      - Admin Statistics
+  /api/v1/admin/statistics/products/date-range:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Date Range
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.DateRangeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/statistics.ProductStatistics'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get products statistics by date range (admin only)
+      tags:
+      - Admin Statistics
+  /api/v1/admin/statistics/products/year:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Year
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.YearRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/statistics.ProductStatistics'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get products statistics by year (admin only)
+      tags:
+      - Admin Statistics
+  /api/v1/admin/statistics/sales:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/statistics.SalesStatistics'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all sales statistics (admin only)
+      tags:
+      - Admin Statistics
+  /api/v1/admin/statistics/sales/date-range:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Date Range
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.DateRangeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/statistics.SalesStatistics'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get sales statistics by date range (admin only)
+      tags:
+      - Admin Statistics
+  /api/v1/admin/statistics/sales/year:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Year
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.YearRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/statistics.SalesStatistics'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get sales statistics by year (admin only)
+      tags:
+      - Admin Statistics
   /api/v1/categories:
     get:
       produces:
@@ -631,6 +944,100 @@ paths:
       summary: Delete product review (auth required)
       tags:
       - Reviews
+  /api/v1/wishlist:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get user's wishlist (auth required)
+      tags:
+      - Wishlist
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Product ID
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.AddToWishlistRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Add product to wishlist (auth required)
+      tags:
+      - Wishlist
+  /api/v1/wishlist/{id}:
+    delete:
+      parameters:
+      - description: Wishlist Item ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Remove product from wishlist (auth required)
+      tags:
+      - Wishlist
   /auth/login:
     post:
       consumes:
@@ -710,7 +1117,7 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: Register new user
+      summary: Register new admin
       tags:
       - Auth
 schemes:
