@@ -12,7 +12,9 @@ import (
 	categoriessvc "github.com/bnursik/aitu-ad-final-back/internal/services/categories"
 	orderssvc "github.com/bnursik/aitu-ad-final-back/internal/services/orders"
 	productssvc "github.com/bnursik/aitu-ad-final-back/internal/services/products"
+	statisticssvc "github.com/bnursik/aitu-ad-final-back/internal/services/statistics"
 	userssvc "github.com/bnursik/aitu-ad-final-back/internal/services/users"
+	wishlistsvc "github.com/bnursik/aitu-ad-final-back/internal/services/wishlist"
 )
 
 func Build(cfg *config.Config) (*Container, error) {
@@ -46,6 +48,15 @@ func Build(cfg *config.Config) (*Container, error) {
 	ordersSvc := orderssvc.New(ordersRepo)
 	ordersHandler := handlers.NewOrdersHandler(ordersSvc)
 
+	statisticsRepo := mongorepo.NewStatisticsRepo(dbase)
+	statisticsSvc := statisticssvc.New(statisticsRepo)
+	statisticsHandler := handlers.NewStatisticsHandler(statisticsSvc)
+
+	wishlistRepo := mongorepo.NewWishlistRepo(dbase)
+	_ = wishlistRepo.EnsureIndexes(context.Background())
+	wishlistSvc := wishlistsvc.New(wishlistRepo)
+	wishlistHandler := handlers.NewWishlistHandler(wishlistSvc)
+
 	return &Container{
 		Auth: authHandler,
 		Shutdown: func(ctx context.Context) error {
@@ -56,5 +67,7 @@ func Build(cfg *config.Config) (*Container, error) {
 		Categories: categoriesHandler,
 		Products:   productsHandler,
 		Orders:     ordersHandler,
+		Statistics: statisticsHandler,
+		Wishlist:   wishlistHandler,
 	}, nil
 }

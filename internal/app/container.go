@@ -18,4 +18,6 @@ type Container struct {
 	JWT        *middleware.JWT
 	Products   *handlers.ProductsHandler
 	Orders     *handlers.OrdersHandler
+	Statistics *handlers.StatisticsHandler
+	Wishlist   *handlers.WishlistHandler
 }

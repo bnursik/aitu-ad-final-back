@@ -15,7 +15,7 @@ func Connect(ctx context.Context, mongoURI string) (*mongo.Client, error) {
 		return nil, fmt.Errorf("mongo connect: %w", err)
 	}
 
-	pingCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	pingCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
 	if err := client.Ping(pingCtx, nil); err != nil {

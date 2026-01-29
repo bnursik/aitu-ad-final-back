@@ -28,6 +28,10 @@ type UpdateOrderStatusRequest struct {
 	Status string `json:"status" binding:"required"`
 }
 
+type FindOrderByIDRequest struct {
+	OrderID string `json:"order_id" binding:"required"`
+}
+
 func isAdminFromCtx(c *gin.Context) bool {
 	roleVal, _ := c.Get(middleware.CtxRole)
 	role, _ := roleVal.(string)
@@ -200,6 +204,46 @@ func (h *OrdersHandler) UpdateStatus(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, orderToJSON(updated, true))
+}
+
+// FindOrderByID godoc
+// @Summary Find order by ID (admin only)
+// @Tags Admin Orders
+// @Accept json
+// @Produce json
+// @Param body body FindOrderByIDRequest true "Order ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /api/v1/admin/orders/find [post]
+func (h *OrdersHandler) FindOrderByID(c *gin.Context) {
+	if !isAdminFromCtx(c) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "admin only"})
+		return
+	}
+
+	var req FindOrderByIDRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
+		return
+	}
+
+	it, err := h.svc.Get(c.Request.Context(), req.OrderID, "", true)
+	if err != nil {
+		switch {
+		case errors.Is(err, orders.ErrInvalidID):
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		case errors.Is(err, orders.ErrNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, orderToJSON(it, true))
 }
 
 func orderToJSON(o orders.Order, admin bool) gin.H {
