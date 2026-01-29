@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"log"
 	"net/http"
 
 	"github.com/bnursik/aitu-ad-final-back/internal/domain/users"
@@ -26,6 +27,7 @@ type LoginRequest struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
 }
+
 // Register godoc
 // @Summary Register new user
 // @Description Create new account and return JWT token
@@ -88,6 +90,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
 			return
 		}
+		log.Printf("login error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
 		return
 	}
@@ -131,7 +134,3 @@ func (h *AuthHandler) AdminRegister(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gin.H{"access_token": token, "user": user})
 }
-
-
-
-
