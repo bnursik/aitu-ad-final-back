@@ -26,6 +26,7 @@ type LoginRequest struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
 }
+
 // Register godoc
 // @Summary Register new user
 // @Description Create new account and return JWT token
@@ -37,7 +38,7 @@ type LoginRequest struct {
 // @Failure 400 {object} map[string]string
 // @Failure 409 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router /auth/register [post]
+// @Router api/v1/auth/register [post]
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -74,7 +75,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router /auth/login [post]
+// @Router api/v1/auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -106,7 +107,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 // @Failure 400 {object} map[string]string
 // @Failure 409 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router /auth/register [post]
+// @Router api/v1/auth/admin/register [post]
 func (h *AuthHandler) AdminRegister(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -131,7 +132,3 @@ func (h *AuthHandler) AdminRegister(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gin.H{"access_token": token, "user": user})
 }
-
-
-
-

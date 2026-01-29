@@ -15,6 +15,7 @@ func NewRouter(c *app.Container) *gin.Engine {
 			"https://aitu-ad-final-back-production.up.railway.app/swagger/index.html",
 			"https://mangustad.vercel.app",
 			"http://localhost:5173",
+			"http://localhost:8080/swagger/index.html",
 		},
 		AllowMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders: []string{
