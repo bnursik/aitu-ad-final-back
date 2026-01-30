@@ -51,6 +51,7 @@ func RegisterRoutes(r *gin.Engine, c *app.Container) {
 
 	admin.PUT("/orders/:id/status", c.Orders.UpdateStatus)
 	admin.GET("/orders/:id", c.Orders.Get)
+	admin.POST("/orders/find", c.Orders.FindOrderByID)
 
 	// admin statistics
 	admin.POST("/statistics/sales/date-range", c.Statistics.GetSalesStatsByDateRange)

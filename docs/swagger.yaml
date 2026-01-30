@@ -70,6 +70,13 @@ definitions:
     - end_date
     - start_date
     type: object
+  handlers.FindOrderByIDRequest:
+    properties:
+      order_id:
+        type: string
+    required:
+    - order_id
+    type: object
   handlers.LoginRequest:
     properties:
       email:
@@ -174,7 +181,7 @@ definitions:
       total_revenue:
         type: number
     type: object
-host: localhost:8080
+host: aitu-ad-final-back-production.up.railway.app
 info:
   contact: {}
   description: REST API for Computer Peripherals Store (MongoDB + Gin)
@@ -371,6 +378,52 @@ paths:
               type: string
             type: object
       summary: Update order status (admin only)
+      tags:
+      - Admin Orders
+  /admin/orders/find:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Order ID
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.FindOrderByIDRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Find order by ID (admin only)
       tags:
       - Admin Orders
   /admin/products:
