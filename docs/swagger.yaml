@@ -188,7 +188,7 @@ info:
   title: Peripherals Store API
   version: "1.0"
 paths:
-  /admin/auth/admin/register:
+  /admin/auth/register:
     post:
       consumes:
       - application/json

@@ -13,7 +13,7 @@
     "host": "aitu-ad-final-back-production.up.railway.app",
     "basePath": "/api/v1",
     "paths": {
-        "/admin/auth/admin/register": {
+        "/admin/auth/register": {
             "post": {
                 "description": "Create new account and return JWT token",
                 "consumes": [

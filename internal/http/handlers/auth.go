@@ -117,7 +117,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 // @Failure 400 {object} map[string]string
 // @Failure 409 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router /admin/auth/admin/register [post]
+// @Router /admin/auth/register [post]
 func (h *AuthHandler) AdminRegister(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

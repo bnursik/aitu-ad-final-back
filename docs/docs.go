@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/admin/auth/admin/register": {
+        "/admin/auth/register": {
             "post": {
                 "description": "Create new account and return JWT token",
                 "consumes": [
