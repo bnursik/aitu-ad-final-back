@@ -15,6 +15,9 @@ type User struct {
 	Email        string
 	PasswordHash string
 	Role         Role
+	Address      string
+	Phone        string
+	Bio          string
 	CreatedAt    time.Time
 }
 
@@ -23,7 +26,17 @@ type PublicUser struct {
 	Name      string    `json:"name"`
 	Email     string    `json:"email"`
 	Role      Role      `json:"role"`
+	Address   string    `json:"address"`
+	Phone     string    `json:"phone"`
+	Bio       string    `json:"bio"`
 	CreatedAt time.Time `json:"created_at"`
+}
+
+type UpdateProfileInput struct {
+	Name    *string
+	Address *string
+	Phone   *string
+	Bio     *string
 }
 
 func (u User) Public() PublicUser {
@@ -32,6 +45,9 @@ func (u User) Public() PublicUser {
 		Name:      u.Name,
 		Email:     u.Email,
 		Role:      u.Role,
+		Address:   u.Address,
+		Phone:     u.Phone,
+		Bio:       u.Bio,
 		CreatedAt: u.CreatedAt,
 	}
 }

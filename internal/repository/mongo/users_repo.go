@@ -36,6 +36,9 @@ type userDoc struct {
 	Email        string             `bson:"email"`
 	PasswordHash string             `bson:"password_hash"`
 	Role         string             `bson:"role"`
+	Address      string             `bson:"address,omitempty"`
+	Phone        string             `bson:"phone,omitempty"`
+	Bio          string             `bson:"bio,omitempty"`
 	CreatedAt    time.Time          `bson:"created_at"`
 }
 
@@ -71,12 +74,80 @@ func (r *UsersRepo) FindByEmail(ctx context.Context, email string) (users.User, 
 		return users.User{}, fmt.Errorf("find by email: %w", err)
 	}
 
+	return mapUserDoc(doc), nil
+}
+
+func (r *UsersRepo) FindByID(ctx context.Context, id string) (users.User, error) {
+	oid, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return users.User{}, users.ErrUserNotFound
+	}
+
+	var doc userDoc
+	err = r.col.FindOne(ctx, bson.M{"_id": oid}).Decode(&doc)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return users.User{}, users.ErrUserNotFound
+		}
+		return users.User{}, fmt.Errorf("find by id: %w", err)
+	}
+
+	return mapUserDoc(doc), nil
+}
+
+func (r *UsersRepo) Update(ctx context.Context, id string, in users.UpdateProfileInput) (users.User, error) {
+	oid, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return users.User{}, users.ErrUserNotFound
+	}
+
+	set := bson.M{}
+	if in.Name != nil {
+		set["name"] = *in.Name
+	}
+	if in.Address != nil {
+		set["address"] = *in.Address
+	}
+	if in.Phone != nil {
+		set["phone"] = *in.Phone
+	}
+	if in.Bio != nil {
+		set["bio"] = *in.Bio
+	}
+
+	if len(set) == 0 {
+		return r.FindByID(ctx, id)
+	}
+
+	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
+
+	var doc userDoc
+	err = r.col.FindOneAndUpdate(
+		ctx,
+		bson.M{"_id": oid},
+		bson.M{"$set": set},
+		opts,
+	).Decode(&doc)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return users.User{}, users.ErrUserNotFound
+		}
+		return users.User{}, fmt.Errorf("update user: %w", err)
+	}
+
+	return mapUserDoc(doc), nil
+}
+
+func mapUserDoc(doc userDoc) users.User {
 	return users.User{
 		ID:           doc.ID.Hex(),
 		Name:         doc.Name,
 		Email:        doc.Email,
 		PasswordHash: doc.PasswordHash,
 		Role:         users.Role(doc.Role),
+		Address:      doc.Address,
+		Phone:        doc.Phone,
+		Bio:          doc.Bio,
 		CreatedAt:    doc.CreatedAt,
-	}, nil
+	}
 }

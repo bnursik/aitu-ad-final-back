@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/bnursik/aitu-ad-final-back/internal/domain/products"
 	"github.com/bnursik/aitu-ad-final-back/internal/http/middleware"
@@ -43,10 +44,35 @@ type AddReviewRequest struct {
 // @Tags Products
 // @Produce json
 // @Param categoryId query string false "Category ID (ObjectId hex)"
+// @Param offset query int true "Offset for pagination"
+// @Param limit query int true "Limit for pagination"
 // @Success 200 {array} map[string]interface{}
-// @Router /api/v1/products [get]
+// @Failure 400 {object} map[string]string
+// @Router /products [get]
 func (h *ProductsHandler) List(c *gin.Context) {
+	offsetStr := c.Query("offset")
+	limitStr := c.Query("limit")
+
+	if offsetStr == "" || limitStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "offset and limit are required"})
+		return
+	}
+
+	offset, err := strconv.ParseInt(offsetStr, 10, 64)
+	if err != nil || offset < 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid offset"})
+		return
+	}
+
+	limit, err := strconv.ParseInt(limitStr, 10, 64)
+	if err != nil || limit <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid limit"})
+		return
+	}
+
 	var f products.ListFilter
+	f.Offset = offset
+	f.Limit = limit
 	if v := c.Query("categoryId"); v != "" {
 		f.CategoryID = &v
 	}
@@ -86,7 +112,7 @@ func (h *ProductsHandler) List(c *gin.Context) {
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
-// @Router /api/v1/products/{id} [get]
+// @Router /products/{id} [get]
 func (h *ProductsHandler) Get(c *gin.Context) {
 	id := c.Param("id")
 
@@ -135,7 +161,7 @@ func (h *ProductsHandler) Get(c *gin.Context) {
 // @Param body body CreateProductRequest true "Product"
 // @Success 201 {object} map[string]interface{}
 // @Failure 400 {object} map[string]string
-// @Router /api/v1/admin/products [post]
+// @Router /admin/products [post]
 func (h *ProductsHandler) Create(c *gin.Context) {
 	var req CreateProductRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -188,7 +214,7 @@ func (h *ProductsHandler) Create(c *gin.Context) {
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
-// @Router /api/v1/admin/products/{id} [put]
+// @Router /admin/products/{id} [put]
 func (h *ProductsHandler) Update(c *gin.Context) {
 	id := c.Param("id")
 
@@ -245,7 +271,7 @@ func (h *ProductsHandler) Update(c *gin.Context) {
 // @Success 204
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
-// @Router /api/v1/admin/products/{id} [delete]
+// @Router /admin/products/{id} [delete]
 func (h *ProductsHandler) Delete(c *gin.Context) {
 	id := c.Param("id")
 
@@ -275,7 +301,7 @@ func (h *ProductsHandler) Delete(c *gin.Context) {
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
 // @Failure 404 {object} map[string]string
-// @Router /api/v1/products/{id}/reviews [post]
+// @Router /products/{id}/reviews [post]
 func (h *ProductsHandler) AddReview(c *gin.Context) {
 	productID := c.Param("id")
 
@@ -336,7 +362,7 @@ func (h *ProductsHandler) AddReview(c *gin.Context) {
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
 // @Failure 404 {object} map[string]string
-// @Router /api/v1/products/{id}/reviews/{reviewId} [delete]
+// @Router /products/{id}/reviews/{reviewId} [delete]
 func (h *ProductsHandler) DeleteReview(c *gin.Context) {
 	productID := c.Param("id")
 	reviewID := c.Param("reviewId")

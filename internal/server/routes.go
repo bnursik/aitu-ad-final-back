@@ -50,7 +50,7 @@ func RegisterRoutes(r *gin.Engine, c *app.Container) {
 	admin.DELETE("/categories/:id", c.Categories.Delete)
 
 	admin.PUT("/orders/:id/status", c.Orders.UpdateStatus)
-	admin.POST("/orders/find", c.Orders.FindOrderByID)
+	admin.GET("/orders/:id", c.Orders.Get)
 
 	// admin statistics
 	admin.POST("/statistics/sales/date-range", c.Statistics.GetSalesStatsByDateRange)
@@ -63,6 +63,10 @@ func RegisterRoutes(r *gin.Engine, c *app.Container) {
 	v1.POST("/auth/register", c.Auth.Register)
 	v1.POST("/auth/login", c.Auth.Login)
 	admin.POST("/auth/admin/register", c.Auth.AdminRegister)
+
+	// profile: auth required
+	v1.GET("/profile", middleware.AuthRequired(c.JWT), c.Auth.GetProfile)
+	v1.PUT("/profile", middleware.AuthRequired(c.JWT), c.Auth.UpdateProfile)
 
 	// wishlist: auth required
 	wishlistGroup := v1.Group("/wishlist")

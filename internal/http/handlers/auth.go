@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/bnursik/aitu-ad-final-back/internal/domain/users"
+	"github.com/bnursik/aitu-ad-final-back/internal/http/middleware"
 	"github.com/gin-gonic/gin"
 )
 
@@ -28,6 +29,13 @@ type LoginRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
+type UpdateProfileRequest struct {
+	Name    *string `json:"name"`
+	Address *string `json:"address"`
+	Phone   *string `json:"phone"`
+	Bio     *string `json:"bio"`
+}
+
 // Register godoc
 // @Summary Register new user
 // @Description Create new account and return JWT token
@@ -39,7 +47,7 @@ type LoginRequest struct {
 // @Failure 400 {object} map[string]string
 // @Failure 409 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router api/v1/auth/register [post]
+// @Router /auth/register [post]
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -76,7 +84,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router api/v1/auth/login [post]
+// @Router /auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -109,7 +117,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 // @Failure 400 {object} map[string]string
 // @Failure 409 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router api/v1/auth/admin/register [post]
+// @Router /admin/auth/admin/register [post]
 func (h *AuthHandler) AdminRegister(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -133,4 +141,89 @@ func (h *AuthHandler) AdminRegister(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{"access_token": token, "user": user})
+}
+
+// GetProfile godoc
+// @Summary Get user profile (auth required)
+// @Tags Profile
+// @Produce json
+// @Success 200 {object} map[string]interface{}
+// @Failure 401 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /profile [get]
+func (h *AuthHandler) GetProfile(c *gin.Context) {
+	userIDVal, ok := c.Get(middleware.CtxUserID)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	userID, _ := userIDVal.(string)
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	user, err := h.svc.GetProfile(c.Request.Context(), userID)
+	if err != nil {
+		if errors.Is(err, users.ErrUserNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
+}
+
+// UpdateProfile godoc
+// @Summary Update user profile (auth required)
+// @Tags Profile
+// @Accept json
+// @Produce json
+// @Param body body UpdateProfileRequest true "Profile data"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /profile [put]
+func (h *AuthHandler) UpdateProfile(c *gin.Context) {
+	userIDVal, ok := c.Get(middleware.CtxUserID)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	userID, _ := userIDVal.(string)
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var req UpdateProfileRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
+		return
+	}
+
+	user, err := h.svc.UpdateProfile(c.Request.Context(), userID, users.UpdateProfileInput{
+		Name:    req.Name,
+		Address: req.Address,
+		Phone:   req.Phone,
+		Bio:     req.Bio,
+	})
+	if err != nil {
+		switch {
+		case errors.Is(err, users.ErrUserNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		case err.Error() == "invalid name":
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid name"})
+		case err.Error() == "invalid bio":
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid bio"})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
 }

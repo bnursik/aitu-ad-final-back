@@ -29,8 +29,13 @@ type categoryDoc struct {
 	UpdatedAt   time.Time          `bson:"updatedAt"`
 }
 
-func (r *CategoriesRepo) List(ctx context.Context) ([]categories.Category, error) {
-	cur, err := r.col.Find(ctx, bson.M{}, options.Find().SetSort(bson.D{{Key: "createdAt", Value: -1}}))
+func (r *CategoriesRepo) List(ctx context.Context, f categories.ListFilter) ([]categories.Category, error) {
+	opts := options.Find().
+		SetSort(bson.D{{Key: "createdAt", Value: -1}}).
+		SetSkip(f.Offset).
+		SetLimit(f.Limit)
+
+	cur, err := r.col.Find(ctx, bson.M{}, opts)
 	if err != nil {
 		return nil, fmt.Errorf("find categories: %w", err)
 	}

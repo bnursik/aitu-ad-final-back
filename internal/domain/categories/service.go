@@ -7,7 +7,7 @@ type ProductsCounter interface {
 }
 
 type Service interface {
-	List(ctx context.Context) ([]Category, error)
+	List(ctx context.Context, f ListFilter) ([]Category, error)
 	Get(ctx context.Context, id string) (Category, error)
 	Create(ctx context.Context, in CreateInput) (Category, error)
 	Update(ctx context.Context, id string, in UpdateInput) (Category, error)

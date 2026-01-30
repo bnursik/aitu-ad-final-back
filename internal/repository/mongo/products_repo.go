@@ -52,7 +52,11 @@ func (r *ProductsRepo) List(ctx context.Context, f products.ListFilter) ([]produ
 		filter["categoryId"] = oid
 	}
 
-	opts := options.Find().SetSort(bson.D{{Key: "createdAt", Value: -1}})
+	opts := options.Find().
+		SetSort(bson.D{{Key: "createdAt", Value: -1}}).
+		SetSkip(f.Offset).
+		SetLimit(f.Limit)
+
 	cur, err := r.col.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, fmt.Errorf("find products: %w", err)

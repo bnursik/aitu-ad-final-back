@@ -24,6 +24,8 @@ type Review struct {
 
 type ListFilter struct {
 	CategoryID *string
+	Offset     int64
+	Limit      int64
 }
 
 type CreateInput struct {

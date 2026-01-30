@@ -10,6 +10,11 @@ type Category struct {
 	UpdatedAt   time.Time
 }
 
+type ListFilter struct {
+	Offset int64
+	Limit  int64
+}
+
 type CreateInput struct {
 	Name        string
 	Description string

@@ -148,3 +148,54 @@ func (s *Service) AdminRegister(ctx context.Context, name, email, password strin
 
 	return token, created.Public(), nil
 }
+
+func (s *Service) GetProfile(ctx context.Context, userID string) (users.PublicUser, error) {
+	uid := strings.TrimSpace(userID)
+	if uid == "" {
+		return users.PublicUser{}, users.ErrUserNotFound
+	}
+
+	u, err := s.repo.FindByID(ctx, uid)
+	if err != nil {
+		return users.PublicUser{}, err
+	}
+
+	return u.Public(), nil
+}
+
+func (s *Service) UpdateProfile(ctx context.Context, userID string, in users.UpdateProfileInput) (users.PublicUser, error) {
+	uid := strings.TrimSpace(userID)
+	if uid == "" {
+		return users.PublicUser{}, users.ErrUserNotFound
+	}
+
+	if in.Name != nil {
+		n := strings.TrimSpace(*in.Name)
+		if len(n) < 2 || len(n) > 60 {
+			return users.PublicUser{}, fmt.Errorf("invalid name")
+		}
+		in.Name = &n
+	}
+	if in.Address != nil {
+		a := strings.TrimSpace(*in.Address)
+		in.Address = &a
+	}
+	if in.Phone != nil {
+		p := strings.TrimSpace(*in.Phone)
+		in.Phone = &p
+	}
+	if in.Bio != nil {
+		b := strings.TrimSpace(*in.Bio)
+		if len(b) > 500 {
+			return users.PublicUser{}, fmt.Errorf("invalid bio")
+		}
+		in.Bio = &b
+	}
+
+	u, err := s.repo.Update(ctx, uid, in)
+	if err != nil {
+		return users.PublicUser{}, err
+	}
+
+	return u.Public(), nil
+}

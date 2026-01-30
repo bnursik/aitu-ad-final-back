@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/bnursik/aitu-ad-final-back/internal/domain/categories"
 	"github.com/gin-gonic/gin"
@@ -30,16 +31,41 @@ type UpdateCategoryRequest struct {
 // @Summary List categories
 // @Tags Categories
 // @Produce json
+// @Param offset query int true "Offset for pagination"
+// @Param limit query int true "Limit for pagination"
 // @Success 200 {array} map[string]interface{}
-// @Router /api/v1/categories [get]
+// @Failure 400 {object} map[string]string
+// @Router /categories [get]
 func (h *CategoriesHandler) List(c *gin.Context) {
-	items, err := h.svc.List(c.Request.Context())
+	offsetStr := c.Query("offset")
+	limitStr := c.Query("limit")
+
+	if offsetStr == "" || limitStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "offset and limit are required"})
+		return
+	}
+
+	offset, err := strconv.ParseInt(offsetStr, 10, 64)
+	if err != nil || offset < 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid offset"})
+		return
+	}
+
+	limit, err := strconv.ParseInt(limitStr, 10, 64)
+	if err != nil || limit <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid limit"})
+		return
+	}
+
+	items, err := h.svc.List(c.Request.Context(), categories.ListFilter{
+		Offset: offset,
+		Limit:  limit,
+	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
 		return
 	}
 
-	// simple response
 	out := make([]gin.H, 0, len(items))
 	for _, it := range items {
 		out = append(out, gin.H{
@@ -62,7 +88,7 @@ func (h *CategoriesHandler) List(c *gin.Context) {
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
-// @Router /api/v1/categories/{id} [get]
+// @Router /categories/{id} [get]
 func (h *CategoriesHandler) Get(c *gin.Context) {
 	id := c.Param("id")
 
@@ -96,7 +122,7 @@ func (h *CategoriesHandler) Get(c *gin.Context) {
 // @Param body body CreateCategoryRequest true "Category"
 // @Success 201 {object} map[string]interface{}
 // @Failure 400 {object} map[string]string
-// @Router /api/v1/admin/categories [post]
+// @Router /admin/categories [post]
 func (h *CategoriesHandler) Create(c *gin.Context) {
 	var req CreateCategoryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -137,7 +163,7 @@ func (h *CategoriesHandler) Create(c *gin.Context) {
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
-// @Router /api/v1/admin/categories/{id} [put]
+// @Router /admin/categories/{id} [put]
 func (h *CategoriesHandler) Update(c *gin.Context) {
 	id := c.Param("id")
 
@@ -183,7 +209,7 @@ func (h *CategoriesHandler) Update(c *gin.Context) {
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 409 {object} map[string]string
-// @Router /api/v1/admin/categories/{id} [delete]
+// @Router /admin/categories/{id} [delete]
 func (h *CategoriesHandler) Delete(c *gin.Context) {
 	id := c.Param("id")
 

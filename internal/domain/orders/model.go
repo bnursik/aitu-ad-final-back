@@ -28,3 +28,8 @@ type Item struct {
 type CreateInput struct {
 	Items []Item
 }
+
+type ListFilter struct {
+	Offset int64
+	Limit  int64
+}

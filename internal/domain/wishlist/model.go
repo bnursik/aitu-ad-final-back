@@ -12,3 +12,8 @@ type WishlistItem struct {
 type AddItemInput struct {
 	ProductID string
 }
+
+type ListFilter struct {
+	Offset int64
+	Limit  int64
+}

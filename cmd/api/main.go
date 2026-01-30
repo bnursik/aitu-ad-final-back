@@ -21,8 +21,7 @@ import (
 // @version 1.0
 // @description REST API for Computer Peripherals Store (MongoDB + Gin)
 // @host localhost:8080
-// @host aitu-ad-final-back-production.up.railway.app
-// @BasePath /
+// @BasePath /api/v1
 // @schemes http https
 // @securityDefinitions.apikey BearerAuth
 // @in header

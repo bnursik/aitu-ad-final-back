@@ -61,10 +61,14 @@ func (r *WishlistRepo) Add(ctx context.Context, item wishlist.WishlistItem) (wis
 	return item, nil
 }
 
-func (r *WishlistRepo) List(ctx context.Context, userID string) ([]wishlist.WishlistItem, error) {
+func (r *WishlistRepo) List(ctx context.Context, userID string, f wishlist.ListFilter) ([]wishlist.WishlistItem, error) {
 	filter := bson.M{"userId": userID}
 
-	opts := options.Find().SetSort(bson.D{{Key: "createdAt", Value: -1}})
+	opts := options.Find().
+		SetSort(bson.D{{Key: "createdAt", Value: -1}}).
+		SetSkip(f.Offset).
+		SetLimit(f.Limit)
+
 	cur, err := r.col.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, fmt.Errorf("find wishlist items: %w", err)

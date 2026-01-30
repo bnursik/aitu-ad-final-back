@@ -35,13 +35,17 @@ type orderDoc struct {
 	UpdatedAt time.Time          `bson:"updatedAt"`
 }
 
-func (r *OrdersRepo) List(ctx context.Context, userID *string) ([]orders.Order, error) {
+func (r *OrdersRepo) List(ctx context.Context, userID *string, f orders.ListFilter) ([]orders.Order, error) {
 	filter := bson.M{}
 	if userID != nil {
 		filter["userId"] = *userID
 	}
 
-	opts := options.Find().SetSort(bson.D{{Key: "createdAt", Value: -1}})
+	opts := options.Find().
+		SetSort(bson.D{{Key: "createdAt", Value: -1}}).
+		SetSkip(f.Offset).
+		SetLimit(f.Limit)
+
 	cur, err := r.col.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, fmt.Errorf("find orders: %w", err)

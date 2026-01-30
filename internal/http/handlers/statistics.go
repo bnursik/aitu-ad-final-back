@@ -36,7 +36,7 @@ type YearRequest struct {
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
 // @Failure 403 {object} map[string]string
-// @Router /api/v1/admin/statistics/sales/date-range [post]
+// @Router /admin/statistics/sales/date-range [post]
 func (h *StatisticsHandler) GetSalesStatsByDateRange(c *gin.Context) {
 	var req DateRangeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -85,7 +85,7 @@ func (h *StatisticsHandler) GetSalesStatsByDateRange(c *gin.Context) {
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
 // @Failure 403 {object} map[string]string
-// @Router /api/v1/admin/statistics/sales/year [post]
+// @Router /admin/statistics/sales/year [post]
 func (h *StatisticsHandler) GetSalesStatsByYear(c *gin.Context) {
 	var req YearRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -115,7 +115,7 @@ func (h *StatisticsHandler) GetSalesStatsByYear(c *gin.Context) {
 // @Success 200 {object} statistics.SalesStatistics
 // @Failure 401 {object} map[string]string
 // @Failure 403 {object} map[string]string
-// @Router /api/v1/admin/statistics/sales [get]
+// @Router /admin/statistics/sales [get]
 func (h *StatisticsHandler) GetSalesStatsAll(c *gin.Context) {
 	stats, err := h.svc.GetSalesStatsAll(c.Request.Context())
 	if err != nil {
@@ -136,7 +136,7 @@ func (h *StatisticsHandler) GetSalesStatsAll(c *gin.Context) {
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
 // @Failure 403 {object} map[string]string
-// @Router /api/v1/admin/statistics/products/date-range [post]
+// @Router /admin/statistics/products/date-range [post]
 func (h *StatisticsHandler) GetProductsStatsByDateRange(c *gin.Context) {
 	var req DateRangeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -185,7 +185,7 @@ func (h *StatisticsHandler) GetProductsStatsByDateRange(c *gin.Context) {
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
 // @Failure 403 {object} map[string]string
-// @Router /api/v1/admin/statistics/products/year [post]
+// @Router /admin/statistics/products/year [post]
 func (h *StatisticsHandler) GetProductsStatsByYear(c *gin.Context) {
 	var req YearRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -215,7 +215,7 @@ func (h *StatisticsHandler) GetProductsStatsByYear(c *gin.Context) {
 // @Success 200 {object} statistics.ProductStatistics
 // @Failure 401 {object} map[string]string
 // @Failure 403 {object} map[string]string
-// @Router /api/v1/admin/statistics/products [get]
+// @Router /admin/statistics/products [get]
 func (h *StatisticsHandler) GetProductsStatsAll(c *gin.Context) {
 	stats, err := h.svc.GetProductsStatsAll(c.Request.Context())
 	if err != nil {
