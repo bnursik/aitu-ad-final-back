@@ -199,3 +199,17 @@ func (s *Service) UpdateProfile(ctx context.Context, userID string, in users.Upd
 
 	return u.Public(), nil
 }
+
+func (s *Service) GetAllUsers(ctx context.Context) ([]users.PublicUser, error) {
+	all, err := s.repo.GetAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]users.PublicUser, len(all))
+	for i, u := range all {
+		result[i] = u.Public()
+	}
+
+	return result, nil
+}

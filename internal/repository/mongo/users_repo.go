@@ -151,3 +151,23 @@ func mapUserDoc(doc userDoc) users.User {
 		CreatedAt:    doc.CreatedAt,
 	}
 }
+
+func (r *UsersRepo) GetAll(ctx context.Context) ([]users.User, error) {
+	cursor, err := r.col.Find(ctx, bson.M{})
+	if err != nil {
+		return nil, fmt.Errorf("find all users: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var docs []userDoc
+	if err := cursor.All(ctx, &docs); err != nil {
+		return nil, fmt.Errorf("decode users: %w", err)
+	}
+
+	result := make([]users.User, len(docs))
+	for i, doc := range docs {
+		result[i] = mapUserDoc(doc)
+	}
+
+	return result, nil
+}

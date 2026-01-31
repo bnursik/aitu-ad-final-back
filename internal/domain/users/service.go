@@ -12,4 +12,5 @@ type Service interface {
 	AdminRegister(ctx context.Context, name, email, password string) (token string, user PublicUser, err error)
 	GetProfile(ctx context.Context, userID string) (PublicUser, error)
 	UpdateProfile(ctx context.Context, userID string, in UpdateProfileInput) (PublicUser, error)
+	GetAllUsers(ctx context.Context) ([]PublicUser, error)
 }

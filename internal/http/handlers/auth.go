@@ -227,3 +227,21 @@ func (h *AuthHandler) UpdateProfile(c *gin.Context) {
 
 	c.JSON(http.StatusOK, user)
 }
+
+// GetAllUsers godoc
+// @Summary Get all users (admin only)
+// @Tags Admin
+// @Produce json
+// @Success 200 {array} users.PublicUser
+// @Failure 401 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /admin/users [get]
+func (h *AuthHandler) GetAllUsers(c *gin.Context) {
+	users, err := h.svc.GetAllUsers(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
+		return
+	}
+
+	c.JSON(http.StatusOK, users)
+}
