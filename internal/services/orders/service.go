@@ -6,17 +6,20 @@ import (
 	"time"
 
 	"github.com/bnursik/aitu-ad-final-back/internal/domain/orders"
+	"github.com/bnursik/aitu-ad-final-back/internal/domain/products"
 )
 
 type Service struct {
-	repo orders.Repo
-	now  func() time.Time
+	repo         orders.Repo
+	productsRepo products.Repo
+	now          func() time.Time
 }
 
-func New(repo orders.Repo) *Service {
+func New(repo orders.Repo, productsRepo products.Repo) *Service {
 	return &Service{
-		repo: repo,
-		now:  func() time.Time { return time.Now().UTC() },
+		repo:         repo,
+		productsRepo: productsRepo,
+		now:          func() time.Time { return time.Now().UTC() },
 	}
 }
 
@@ -49,6 +52,8 @@ func (s *Service) Create(ctx context.Context, userID string, in orders.CreateInp
 	}
 
 	items := make([]orders.Item, 0, len(in.Items))
+	var total float64
+
 	for _, it := range in.Items {
 		p := strings.TrimSpace(it.ProductID)
 		if p == "" {
@@ -57,16 +62,32 @@ func (s *Service) Create(ctx context.Context, userID string, in orders.CreateInp
 		if it.Quantity <= 0 {
 			return orders.Order{}, orders.ErrInvalidQty
 		}
-		items = append(items, orders.Item{ProductID: p, Quantity: it.Quantity})
+
+		pr, err := s.productsRepo.GetByID(ctx, p)
+		if err != nil {
+			return orders.Order{}, orders.ErrInvalidProduct
+		}
+
+		unit := pr.Price
+		line := unit * float64(it.Quantity)
+		total += line
+
+		items = append(items, orders.Item{
+			ProductID: p,
+			Quantity:  it.Quantity,
+			UnitPrice: unit,
+			LineTotal: line,
+		})
 	}
 
 	now := s.now()
 	o := orders.Order{
-		UserID:    uid,
-		Items:     items,
-		Status:    orders.StatusPending,
-		CreatedAt: now,
-		UpdatedAt: now,
+		UserID:     uid,
+		Items:      items,
+		Status:     orders.StatusPending,
+		TotalPrice: total,
+		CreatedAt:  now,
+		UpdatedAt:  now,
 	}
 	return s.repo.Create(ctx, o)
 }

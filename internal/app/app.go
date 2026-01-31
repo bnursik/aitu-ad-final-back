@@ -45,7 +45,7 @@ func Build(cfg *config.Config) (*Container, error) {
 	productsHandler := handlers.NewProductsHandler(productsSvc)
 
 	ordersRepo := mongorepo.NewOrdersRepo(dbase)
-	ordersSvc := orderssvc.New(ordersRepo)
+	ordersSvc := orderssvc.New(ordersRepo, productsRepo)
 	ordersHandler := handlers.NewOrdersHandler(ordersSvc)
 
 	statisticsRepo := mongorepo.NewStatisticsRepo(dbase)

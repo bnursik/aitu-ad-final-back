@@ -280,15 +280,18 @@ func orderToJSON(o orders.Order, admin bool) gin.H {
 		items = append(items, gin.H{
 			"productId": it.ProductID,
 			"quantity":  it.Quantity,
+			"unitPrice": it.UnitPrice,
+			"lineTotal": it.LineTotal,
 		})
 	}
 
 	out := gin.H{
-		"id":        o.ID,
-		"items":     items,
-		"status":    o.Status,
-		"createdAt": o.CreatedAt,
-		"updatedAt": o.UpdatedAt,
+		"id":         o.ID,
+		"items":      items,
+		"status":     o.Status,
+		"totalPrice": o.TotalPrice,
+		"createdAt":  o.CreatedAt,
+		"updatedAt":  o.UpdatedAt,
 	}
 	if admin {
 		out["userId"] = o.UserID
