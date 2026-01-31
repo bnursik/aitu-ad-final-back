@@ -115,7 +115,7 @@ func (h *WishlistHandler) List(c *gin.Context) {
 		return
 	}
 
-	items, err := h.svc.List(c.Request.Context(), userID, wishlist.ListFilter{
+	items, total, err := h.svc.List(c.Request.Context(), userID, wishlist.ListFilter{
 		Offset: offset,
 		Limit:  limit,
 	})
@@ -133,7 +133,12 @@ func (h *WishlistHandler) List(c *gin.Context) {
 		})
 	}
 
-	c.JSON(http.StatusOK, out)
+	c.JSON(http.StatusOK, gin.H{
+		"items":  out,
+		"total":  total,
+		"offset": offset,
+		"limit":  limit,
+	})
 }
 
 // DeleteFromWishlist godoc

@@ -134,3 +134,13 @@ func mapWishlistItemDoc(d wishlistItemDoc) wishlist.WishlistItem {
 		CreatedAt: d.CreatedAt,
 	}
 }
+
+func (r *WishlistRepo) Count(ctx context.Context, userID string) (int64, error) {
+	filter := bson.M{"userId": userID}
+
+	count, err := r.col.CountDocuments(ctx, filter)
+	if err != nil {
+		return 0, fmt.Errorf("count wishlist items: %w", err)
+	}
+	return count, nil
+}

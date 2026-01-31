@@ -42,12 +42,23 @@ func (s *Service) Add(ctx context.Context, userID string, in wishlist.AddItemInp
 	return s.repo.Add(ctx, item)
 }
 
-func (s *Service) List(ctx context.Context, userID string, f wishlist.ListFilter) ([]wishlist.WishlistItem, error) {
+func (s *Service) List(ctx context.Context, userID string, f wishlist.ListFilter) ([]wishlist.WishlistItem, int64, error) {
 	uid := strings.TrimSpace(userID)
 	if uid == "" {
-		return nil, wishlist.ErrInvalidID
+		return nil, 0, wishlist.ErrInvalidID
 	}
-	return s.repo.List(ctx, uid, f)
+
+	items, err := s.repo.List(ctx, uid, f)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	total, err := s.repo.Count(ctx, uid)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return items, total, nil
 }
 
 func (s *Service) Delete(ctx context.Context, userID string, id string) error {
