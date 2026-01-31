@@ -57,7 +57,7 @@ func (h *CategoriesHandler) List(c *gin.Context) {
 		return
 	}
 
-	items, err := h.svc.List(c.Request.Context(), categories.ListFilter{
+	items, total, err := h.svc.List(c.Request.Context(), categories.ListFilter{
 		Offset: offset,
 		Limit:  limit,
 	})
@@ -72,13 +72,18 @@ func (h *CategoriesHandler) List(c *gin.Context) {
 			"id":          it.ID,
 			"name":        it.Name,
 			"description": it.Description,
+			"imageUrl":    "/static/categories/" + it.ID + ".png",
 			"createdAt":   it.CreatedAt,
 			"updatedAt":   it.UpdatedAt,
-			"imageUrl":    "/static/categories/" + it.ID + ".png",
 		})
 	}
 
-	c.JSON(http.StatusOK, out)
+	c.JSON(http.StatusOK, gin.H{
+		"items":  out,
+		"total":  total,
+		"offset": offset,
+		"limit":  limit,
+	})
 }
 
 // GetCategory godoc

@@ -24,8 +24,18 @@ func New(repo categories.Repo, products categories.ProductsCounter) *Service {
 
 var _ categories.Service = (*Service)(nil)
 
-func (s *Service) List(ctx context.Context, f categories.ListFilter) ([]categories.Category, error) {
-	return s.repo.List(ctx, f)
+func (s *Service) List(ctx context.Context, f categories.ListFilter) ([]categories.Category, int64, error) {
+	items, err := s.repo.List(ctx, f)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	total, err := s.repo.Count(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return items, total, nil
 }
 
 func (s *Service) Get(ctx context.Context, id string) (categories.Category, error) {

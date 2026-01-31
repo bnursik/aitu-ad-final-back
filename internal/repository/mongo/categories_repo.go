@@ -155,3 +155,11 @@ func (r *CategoriesRepo) Delete(ctx context.Context, id string) error {
 	}
 	return nil
 }
+
+func (r *CategoriesRepo) Count(ctx context.Context) (int64, error) {
+	n, err := r.col.CountDocuments(ctx, bson.M{})
+	if err != nil {
+		return 0, fmt.Errorf("count categories: %w", err)
+	}
+	return n, nil
+}
