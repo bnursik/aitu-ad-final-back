@@ -74,6 +74,7 @@ func (h *CategoriesHandler) List(c *gin.Context) {
 			"description": it.Description,
 			"createdAt":   it.CreatedAt,
 			"updatedAt":   it.UpdatedAt,
+			"imageUrl":    "/static/categories/" + it.ID + ".jpg",
 		})
 	}
 
@@ -111,6 +112,7 @@ func (h *CategoriesHandler) Get(c *gin.Context) {
 		"description": item.Description,
 		"createdAt":   item.CreatedAt,
 		"updatedAt":   item.UpdatedAt,
+		"imageUrl":    "/static/categories/" + item.ID + ".jpg",
 	})
 }
 
@@ -150,6 +152,7 @@ func (h *CategoriesHandler) Create(c *gin.Context) {
 		"description": item.Description,
 		"createdAt":   item.CreatedAt,
 		"updatedAt":   item.UpdatedAt,
+		"imageUrl":    "/static/categories/" + item.ID + ".jpg",
 	})
 }
 
@@ -197,6 +200,7 @@ func (h *CategoriesHandler) Update(c *gin.Context) {
 		"description": item.Description,
 		"createdAt":   item.CreatedAt,
 		"updatedAt":   item.UpdatedAt,
+		"imageUrl":    "/static/categories/" + item.ID + ".jpg",
 	})
 }
 

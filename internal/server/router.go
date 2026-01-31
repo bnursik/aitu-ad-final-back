@@ -34,6 +34,7 @@ func NewRouter(c *app.Container) *gin.Engine {
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
 
+	r.Static("/static", "./static")
 	RegisterRoutes(r, c)
 	return r
 }
