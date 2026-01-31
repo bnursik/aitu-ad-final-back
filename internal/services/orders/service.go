@@ -25,28 +25,40 @@ func New(repo orders.Repo, productsRepo products.Repo) *Service {
 
 var _ orders.Service = (*Service)(nil)
 
-func (s *Service) List(ctx context.Context, userID string, isAdmin bool, f orders.ListFilter) ([]orders.Order, error) {
+func (s *Service) List(ctx context.Context, userID string, isAdmin bool, f orders.ListFilter) ([]orders.Order, int64, error) {
 	var (
-		list []orders.Order
-		err  error
+		list  []orders.Order
+		total int64
+		err   error
 	)
 
 	if isAdmin {
 		list, err = s.repo.List(ctx, nil, f)
+		if err != nil {
+			return nil, 0, err
+		}
+		total, err = s.repo.Count(ctx, nil)
+		if err != nil {
+			return nil, 0, err
+		}
 	} else {
 		uid := strings.TrimSpace(userID)
 		list, err = s.repo.List(ctx, &uid, f)
-	}
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, 0, err
+		}
+		total, err = s.repo.Count(ctx, &uid)
+		if err != nil {
+			return nil, 0, err
+		}
 	}
 
-	// Compute totals for each returned order
+	// ✅ keep your computed totals (no DB change)
 	if err := s.fillTotals(ctx, list); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return list, nil
+	return list, total, nil
 }
 
 func (s *Service) Get(ctx context.Context, id string, userID string, isAdmin bool) (orders.Order, error) {

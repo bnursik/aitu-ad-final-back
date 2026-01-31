@@ -87,7 +87,7 @@ func (h *OrdersHandler) List(c *gin.Context) {
 
 	admin := isAdminFromCtx(c)
 
-	items, err := h.svc.List(c.Request.Context(), uid, admin, orders.ListFilter{
+	items, total, err := h.svc.List(c.Request.Context(), uid, admin, orders.ListFilter{
 		Offset: offset,
 		Limit:  limit,
 	})
@@ -101,7 +101,12 @@ func (h *OrdersHandler) List(c *gin.Context) {
 		out = append(out, orderToJSON(it, admin))
 	}
 
-	c.JSON(http.StatusOK, out)
+	c.JSON(http.StatusOK, gin.H{
+		"items":  out,
+		"total":  total,
+		"offset": offset,
+		"limit":  limit,
+	})
 }
 
 // GetOrder godoc

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/bnursik/aitu-ad-final-back/internal/domain/orders"
@@ -155,4 +156,17 @@ func mapOrderDoc(d orderDoc) orders.Order {
 		CreatedAt: d.CreatedAt,
 		UpdatedAt: d.UpdatedAt,
 	}
+}
+
+func (r *OrdersRepo) Count(ctx context.Context, userID *string) (int64, error) {
+	filter := bson.M{}
+	if userID != nil && strings.TrimSpace(*userID) != "" {
+		filter["userId"] = *userID
+	}
+
+	n, err := r.col.CountDocuments(ctx, filter)
+	if err != nil {
+		return 0, fmt.Errorf("count orders: %w", err)
+	}
+	return n, nil
 }
