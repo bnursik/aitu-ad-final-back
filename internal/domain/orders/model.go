@@ -12,12 +12,10 @@ const (
 )
 
 type Order struct {
-	ID         string
-	UserID     string
-	Items      []Item
-	Status     Status
-	TotalPrice float64
-
+	ID        string
+	UserID    string
+	Items     []Item
+	Status    Status
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
@@ -25,9 +23,6 @@ type Order struct {
 type Item struct {
 	ProductID string
 	Quantity  int64
-
-	UnitPrice float64
-	LineTotal float64
 }
 
 type CreateInput struct {

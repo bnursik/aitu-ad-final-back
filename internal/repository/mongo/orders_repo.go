@@ -24,21 +24,15 @@ func NewOrdersRepo(db *mongo.Database) *OrdersRepo {
 type orderItemDoc struct {
 	ProductID primitive.ObjectID `bson:"productId"`
 	Quantity  int64              `bson:"quantity"`
-
-	UnitPrice float64 `bson:"unitPrice,omitempty"`
-	LineTotal float64 `bson:"lineTotal,omitempty"`
 }
 
 type orderDoc struct {
-	ID     primitive.ObjectID `bson:"_id,omitempty"`
-	UserID string             `bson:"userId"`
-	Items  []orderItemDoc     `bson:"items"`
-	Status string             `bson:"status"`
-
-	TotalPrice float64 `bson:"totalPrice,omitempty"`
-
-	CreatedAt time.Time `bson:"createdAt"`
-	UpdatedAt time.Time `bson:"updatedAt"`
+	ID        primitive.ObjectID `bson:"_id,omitempty"`
+	UserID    string             `bson:"userId"`
+	Items     []orderItemDoc     `bson:"items"`
+	Status    string             `bson:"status"`
+	CreatedAt time.Time          `bson:"createdAt"`
+	UpdatedAt time.Time          `bson:"updatedAt"`
 }
 
 func (r *OrdersRepo) List(ctx context.Context, userID *string, f orders.ListFilter) ([]orders.Order, error) {
@@ -99,22 +93,16 @@ func (r *OrdersRepo) Create(ctx context.Context, o orders.Order) (orders.Order, 
 		if err != nil {
 			return orders.Order{}, orders.ErrInvalidProduct
 		}
-		items = append(items, orderItemDoc{
-			ProductID: pid,
-			Quantity:  it.Quantity,
-			UnitPrice: it.UnitPrice,
-			LineTotal: it.LineTotal,
-		})
+		items = append(items, orderItemDoc{ProductID: pid, Quantity: it.Quantity})
 	}
 
 	doc := orderDoc{
-		ID:         primitive.NewObjectID(),
-		UserID:     o.UserID,
-		Items:      items,
-		Status:     string(o.Status),
-		CreatedAt:  o.CreatedAt,
-		UpdatedAt:  o.UpdatedAt,
-		TotalPrice: o.TotalPrice,
+		ID:        primitive.NewObjectID(),
+		UserID:    o.UserID,
+		Items:     items,
+		Status:    string(o.Status),
+		CreatedAt: o.CreatedAt,
+		UpdatedAt: o.UpdatedAt,
 	}
 
 	if _, err := r.col.InsertOne(ctx, doc); err != nil {
@@ -156,18 +144,15 @@ func mapOrderDoc(d orderDoc) orders.Order {
 		items = append(items, orders.Item{
 			ProductID: it.ProductID.Hex(),
 			Quantity:  it.Quantity,
-			UnitPrice: it.UnitPrice,
-			LineTotal: it.LineTotal,
 		})
 	}
 
 	return orders.Order{
-		ID:         d.ID.Hex(),
-		UserID:     d.UserID,
-		Items:      items,
-		Status:     orders.Status(d.Status),
-		TotalPrice: d.TotalPrice,
-		CreatedAt:  d.CreatedAt,
-		UpdatedAt:  d.UpdatedAt,
+		ID:        d.ID.Hex(),
+		UserID:    d.UserID,
+		Items:     items,
+		Status:    orders.Status(d.Status),
+		CreatedAt: d.CreatedAt,
+		UpdatedAt: d.UpdatedAt,
 	}
 }
