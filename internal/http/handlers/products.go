@@ -77,7 +77,7 @@ func (h *ProductsHandler) List(c *gin.Context) {
 		f.CategoryID = &v
 	}
 
-	items, err := h.svc.List(c.Request.Context(), f)
+	items, total, err := h.svc.List(c.Request.Context(), f)
 	if err != nil {
 		if errors.Is(err, products.ErrInvalidCategory) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid categoryId"})
@@ -101,7 +101,12 @@ func (h *ProductsHandler) List(c *gin.Context) {
 		})
 	}
 
-	c.JSON(http.StatusOK, out)
+	c.JSON(http.StatusOK, gin.H{
+		"items":  out,
+		"total":  total,
+		"offset": offset,
+		"limit":  limit,
+	})
 }
 
 // GetProduct godoc

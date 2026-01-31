@@ -269,3 +269,20 @@ func mapProductDoc(d productDoc) products.Product {
 	}
 	return out
 }
+
+func (r *ProductsRepo) Count(ctx context.Context, f products.ListFilter) (int64, error) {
+	filter := bson.M{}
+	if f.CategoryID != nil && strings.TrimSpace(*f.CategoryID) != "" {
+		oid, err := primitive.ObjectIDFromHex(*f.CategoryID)
+		if err != nil {
+			return 0, products.ErrInvalidCategory
+		}
+		filter["categoryId"] = oid
+	}
+
+	n, err := r.col.CountDocuments(ctx, filter)
+	if err != nil {
+		return 0, fmt.Errorf("count products: %w", err)
+	}
+	return n, nil
+}

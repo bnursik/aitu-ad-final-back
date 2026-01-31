@@ -3,7 +3,7 @@ package products
 import "context"
 
 type Service interface {
-	List(ctx context.Context, f ListFilter) ([]Product, error)
+	List(ctx context.Context, f ListFilter) ([]Product, int64, error)
 	Get(ctx context.Context, id string) (Product, error)
 	Create(ctx context.Context, in CreateInput) (Product, error)
 	Update(ctx context.Context, id string, in UpdateInput) (Product, error)

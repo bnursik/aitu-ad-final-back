@@ -4,6 +4,7 @@ import "context"
 
 type Repo interface {
 	List(ctx context.Context, f ListFilter) ([]Product, error)
+	Count(ctx context.Context, f ListFilter) (int64, error)
 	GetByID(ctx context.Context, id string) (Product, error)
 	Create(ctx context.Context, p Product) (Product, error)
 	Update(ctx context.Context, id string, in UpdateInput) (Product, error)
