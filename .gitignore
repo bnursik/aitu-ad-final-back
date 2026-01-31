@@ -1,3 +1,4 @@
 .env
 /cmd/test/
 .exe
+/data

@@ -496,19 +496,22 @@ Authorization: Bearer <token>
 
 ---
 
-### Statistics (Admin Only)
+### Stats (Admin Only)
+
+Two GET endpoints. Query params: **year** OR **start** & **end** (YYYY-MM-DD). If both **year** and **start** are provided, results are filtered by **year**.
 
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
-| GET | `/admin/statistics/sales` | Get all sales statistics | Admin |
-| POST | `/admin/statistics/sales/date-range` | Get sales stats by date range | Admin |
-| POST | `/admin/statistics/sales/year` | Get sales stats by year | Admin |
-| GET | `/admin/statistics/products` | Get all products statistics | Admin |
-| POST | `/admin/statistics/products/date-range` | Get products stats by date range | Admin |
-| POST | `/admin/statistics/products/year` | Get products stats by year | Admin |
+| GET | `/admin/stats/sales` | Sales statistics (no params = all; `year` or `start`+`end`) | Admin |
+| GET | `/admin/stats/products` | Products statistics (no params = all; `year` or `start`+`end`) | Admin |
 
-#### Get All Sales Statistics
-**GET** `/admin/statistics/sales`
+#### Get Sales Statistics
+**GET** `/admin/stats/sales`
+
+**Query params (optional):**
+- `year` — e.g. `2024` (takes precedence if both year and start are present)
+- `start` — start date `YYYY-MM-DD` (use with `end`)
+- `end` — end date `YYYY-MM-DD` (use with `start`)
 
 **Response (200):**
 ```json
@@ -523,29 +526,10 @@ Authorization: Bearer <token>
 }
 ```
 
-#### Get Sales Statistics by Date Range
-**POST** `/admin/statistics/sales/date-range`
+#### Get Products Statistics
+**GET** `/admin/stats/products`
 
-**Request Body:**
-```json
-{
-  "start_date": "2024-01-01",
-  "end_date": "2024-12-31"
-}
-```
-
-#### Get Sales Statistics by Year
-**POST** `/admin/statistics/sales/year`
-
-**Request Body:**
-```json
-{
-  "year": 2024
-}
-```
-
-#### Get All Products Statistics
-**GET** `/admin/statistics/products`
+**Query params (optional):** same as sales — `year` OR `start` & `end`.
 
 **Response (200):**
 ```json
@@ -556,27 +540,6 @@ Authorization: Bearer <token>
   "total_reviews": 2500,
   "average_rating": 4.2,
   "total_categories": 25
-}
-```
-
-#### Get Products Statistics by Date Range
-**POST** `/admin/statistics/products/date-range`
-
-**Request Body:**
-```json
-{
-  "start_date": "2024-01-01",
-  "end_date": "2024-12-31"
-}
-```
-
-#### Get Products Statistics by Year
-**POST** `/admin/statistics/products/year`
-
-**Request Body:**
-```json
-{
-  "year": 2024
 }
 ```
 

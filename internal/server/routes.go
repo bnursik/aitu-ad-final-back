@@ -53,13 +53,9 @@ func RegisterRoutes(r *gin.Engine, c *app.Container) {
 	admin.GET("/orders/:id", c.Orders.Get)
 	admin.POST("/orders/find", c.Orders.FindOrderByID)
 
-	// admin statistics
-	admin.POST("/statistics/sales/date-range", c.Statistics.GetSalesStatsByDateRange)
-	admin.POST("/statistics/sales/year", c.Statistics.GetSalesStatsByYear)
-	admin.GET("/statistics/sales", c.Statistics.GetSalesStatsAll)
-	admin.POST("/statistics/products/date-range", c.Statistics.GetProductsStatsByDateRange)
-	admin.POST("/statistics/products/year", c.Statistics.GetProductsStatsByYear)
-	admin.GET("/statistics/products", c.Statistics.GetProductsStatsAll)
+	// admin stats (GET with query: year OR start&end; if year and start both present, use year)
+	admin.GET("/stats/sales", c.Statistics.GetSalesStats)
+	admin.GET("/stats/products", c.Statistics.GetProductsStats)
 
 	v1.POST("/auth/register", c.Auth.Register)
 	v1.POST("/auth/login", c.Auth.Login)

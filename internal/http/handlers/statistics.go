@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/bnursik/aitu-ad-final-back/internal/domain/statistics"
@@ -17,86 +18,82 @@ func NewStatisticsHandler(svc statistics.Service) *StatisticsHandler {
 	return &StatisticsHandler{svc: svc}
 }
 
-type DateRangeRequest struct {
-	StartDate string `json:"start_date" binding:"required"`
-	EndDate   string `json:"end_date" binding:"required"`
+// parseStatsParams reads query params: year OR start&end. If year is present (optionally with start), use year.
+func parseStatsParams(c *gin.Context) (useYear bool, year int, startDate, endDate time.Time, err error) {
+	yearStr := c.Query("year")
+	startStr := c.Query("start")
+	endStr := c.Query("end")
+
+	// If year is provided, use by-year (even if start/end also provided)
+	if yearStr != "" {
+		y, parseErr := strconv.Atoi(yearStr)
+		if parseErr != nil || y < 1900 || y > 2100 {
+			return false, 0, time.Time{}, time.Time{}, statistics.ErrInvalidYear
+		}
+		return true, y, time.Time{}, time.Time{}, nil
+	}
+
+	// Else use date range if both start and end provided
+	if startStr != "" && endStr != "" {
+		start, err1 := time.Parse("2006-01-02", startStr)
+		if err1 != nil {
+			return false, 0, time.Time{}, time.Time{}, err1
+		}
+		end, err2 := time.Parse("2006-01-02", endStr)
+		if err2 != nil {
+			return false, 0, time.Time{}, time.Time{}, err2
+		}
+		end = end.Add(24*time.Hour - time.Second)
+		if start.After(end) {
+			return false, 0, time.Time{}, time.Time{}, statistics.ErrInvalidDateRange
+		}
+		return false, 0, start, end, nil
+	}
+
+	// Neither valid year nor full date range: treat as "all" (no filter)
+	return false, 0, time.Time{}, time.Time{}, nil
 }
 
-type YearRequest struct {
-	Year int `json:"year" binding:"required"`
-}
-
-// GetSalesStatsByDateRange godoc
-// @Summary Get sales statistics by date range (admin only)
-// @Tags Admin Statistics
-// @Accept json
+// GetSalesStats godoc
+// @Summary Get sales statistics (admin only)
+// @Tags Admin Stats
 // @Produce json
-// @Param body body DateRangeRequest true "Date Range"
+// @Param year query int false "Filter by year (e.g. 2024). If year and start both present, year wins."
+// @Param start query string false "Start date YYYY-MM-DD (use with end for date range)"
+// @Param end query string false "End date YYYY-MM-DD (use with start for date range)"
 // @Success 200 {object} statistics.SalesStatistics
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
 // @Failure 403 {object} map[string]string
-// @Router /admin/statistics/sales/date-range [post]
-func (h *StatisticsHandler) GetSalesStatsByDateRange(c *gin.Context) {
-	var req DateRangeRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
-		return
-	}
-
-	startDate, err := time.Parse("2006-01-02", req.StartDate)
+// @Router /admin/stats/sales [get]
+func (h *StatisticsHandler) GetSalesStats(c *gin.Context) {
+	useYear, year, startDate, endDate, err := parseStatsParams(c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid start_date format, use YYYY-MM-DD"})
+		if errors.Is(err, statistics.ErrInvalidYear) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid year"})
+			return
+		}
+		if errors.Is(err, statistics.ErrInvalidDateRange) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid date range"})
+			return
+		}
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid start or end date format, use YYYY-MM-DD"})
 		return
 	}
 
-	endDate, err := time.Parse("2006-01-02", req.EndDate)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid end_date format, use YYYY-MM-DD"})
-		return
+	var stats statistics.SalesStatistics
+	if useYear {
+		stats, err = h.svc.GetSalesStatsByYear(c.Request.Context(), statistics.YearFilter{Year: year})
+	} else if !startDate.IsZero() && !endDate.IsZero() {
+		stats, err = h.svc.GetSalesStatsByDateRange(c.Request.Context(), statistics.DateRangeFilter{StartDate: startDate, EndDate: endDate})
+	} else {
+		stats, err = h.svc.GetSalesStatsAll(c.Request.Context())
 	}
-
-	// Set end date to end of day
-	endDate = endDate.Add(24*time.Hour - time.Second)
-
-	stats, err := h.svc.GetSalesStatsByDateRange(c.Request.Context(), statistics.DateRangeFilter{
-		StartDate: startDate,
-		EndDate:   endDate,
-	})
 	if err != nil {
 		if errors.Is(err, statistics.ErrInvalidDateRange) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid date range"})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
-		return
-	}
-
-	c.JSON(http.StatusOK, stats)
-}
-
-// GetSalesStatsByYear godoc
-// @Summary Get sales statistics by year (admin only)
-// @Tags Admin Statistics
-// @Accept json
-// @Produce json
-// @Param body body YearRequest true "Year"
-// @Success 200 {object} statistics.SalesStatistics
-// @Failure 400 {object} map[string]string
-// @Failure 401 {object} map[string]string
-// @Failure 403 {object} map[string]string
-// @Router /admin/statistics/sales/year [post]
-func (h *StatisticsHandler) GetSalesStatsByYear(c *gin.Context) {
-	var req YearRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
-		return
-	}
-
-	stats, err := h.svc.GetSalesStatsByYear(c.Request.Context(), statistics.YearFilter{
-		Year: req.Year,
-	})
-	if err != nil {
 		if errors.Is(err, statistics.ErrInvalidYear) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid year"})
 			return
@@ -108,117 +105,50 @@ func (h *StatisticsHandler) GetSalesStatsByYear(c *gin.Context) {
 	c.JSON(http.StatusOK, stats)
 }
 
-// GetSalesStatsAll godoc
-// @Summary Get all sales statistics (admin only)
-// @Tags Admin Statistics
+// GetProductsStats godoc
+// @Summary Get products statistics (admin only)
+// @Tags Admin Stats
 // @Produce json
-// @Success 200 {object} statistics.SalesStatistics
-// @Failure 401 {object} map[string]string
-// @Failure 403 {object} map[string]string
-// @Router /admin/statistics/sales [get]
-func (h *StatisticsHandler) GetSalesStatsAll(c *gin.Context) {
-	stats, err := h.svc.GetSalesStatsAll(c.Request.Context())
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
-		return
-	}
-
-	c.JSON(http.StatusOK, stats)
-}
-
-// GetProductsStatsByDateRange godoc
-// @Summary Get products statistics by date range (admin only)
-// @Tags Admin Statistics
-// @Accept json
-// @Produce json
-// @Param body body DateRangeRequest true "Date Range"
+// @Param year query int false "Filter by year (e.g. 2024). If year and start both present, year wins."
+// @Param start query string false "Start date YYYY-MM-DD (use with end for date range)"
+// @Param end query string false "End date YYYY-MM-DD (use with start for date range)"
 // @Success 200 {object} statistics.ProductStatistics
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
 // @Failure 403 {object} map[string]string
-// @Router /admin/statistics/products/date-range [post]
-func (h *StatisticsHandler) GetProductsStatsByDateRange(c *gin.Context) {
-	var req DateRangeRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
-		return
-	}
-
-	startDate, err := time.Parse("2006-01-02", req.StartDate)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid start_date format, use YYYY-MM-DD"})
-		return
-	}
-
-	endDate, err := time.Parse("2006-01-02", req.EndDate)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid end_date format, use YYYY-MM-DD"})
-		return
-	}
-
-	// Set end date to end of day
-	endDate = endDate.Add(24*time.Hour - time.Second)
-
-	stats, err := h.svc.GetProductsStatsByDateRange(c.Request.Context(), statistics.DateRangeFilter{
-		StartDate: startDate,
-		EndDate:   endDate,
-	})
-	if err != nil {
-		if errors.Is(err, statistics.ErrInvalidDateRange) {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid date range"})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
-		return
-	}
-
-	c.JSON(http.StatusOK, stats)
-}
-
-// GetProductsStatsByYear godoc
-// @Summary Get products statistics by year (admin only)
-// @Tags Admin Statistics
-// @Accept json
-// @Produce json
-// @Param body body YearRequest true "Year"
-// @Success 200 {object} statistics.ProductStatistics
-// @Failure 400 {object} map[string]string
-// @Failure 401 {object} map[string]string
-// @Failure 403 {object} map[string]string
-// @Router /admin/statistics/products/year [post]
-func (h *StatisticsHandler) GetProductsStatsByYear(c *gin.Context) {
-	var req YearRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
-		return
-	}
-
-	stats, err := h.svc.GetProductsStatsByYear(c.Request.Context(), statistics.YearFilter{
-		Year: req.Year,
-	})
+// @Router /admin/stats/products [get]
+func (h *StatisticsHandler) GetProductsStats(c *gin.Context) {
+	useYear, year, startDate, endDate, err := parseStatsParams(c)
 	if err != nil {
 		if errors.Is(err, statistics.ErrInvalidYear) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid year"})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
+		if errors.Is(err, statistics.ErrInvalidDateRange) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid date range"})
+			return
+		}
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid start or end date format, use YYYY-MM-DD"})
 		return
 	}
 
-	c.JSON(http.StatusOK, stats)
-}
-
-// GetProductsStatsAll godoc
-// @Summary Get all products statistics (admin only)
-// @Tags Admin Statistics
-// @Produce json
-// @Success 200 {object} statistics.ProductStatistics
-// @Failure 401 {object} map[string]string
-// @Failure 403 {object} map[string]string
-// @Router /admin/statistics/products [get]
-func (h *StatisticsHandler) GetProductsStatsAll(c *gin.Context) {
-	stats, err := h.svc.GetProductsStatsAll(c.Request.Context())
+	var stats statistics.ProductStatistics
+	if useYear {
+		stats, err = h.svc.GetProductsStatsByYear(c.Request.Context(), statistics.YearFilter{Year: year})
+	} else if !startDate.IsZero() && !endDate.IsZero() {
+		stats, err = h.svc.GetProductsStatsByDateRange(c.Request.Context(), statistics.DateRangeFilter{StartDate: startDate, EndDate: endDate})
+	} else {
+		stats, err = h.svc.GetProductsStatsAll(c.Request.Context())
+	}
 	if err != nil {
+		if errors.Is(err, statistics.ErrInvalidDateRange) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid date range"})
+			return
+		}
+		if errors.Is(err, statistics.ErrInvalidYear) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid year"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
 		return
 	}

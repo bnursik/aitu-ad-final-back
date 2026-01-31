@@ -519,64 +519,33 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/statistics/products": {
+        "/admin/stats/products": {
             "get": {
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Admin Statistics"
+                    "Admin Stats"
                 ],
-                "summary": "Get all products statistics (admin only)",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/statistics.ProductStatistics"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/statistics/products/date-range": {
-            "post": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin Statistics"
-                ],
-                "summary": "Get products statistics by date range (admin only)",
+                "summary": "Get products statistics (admin only)",
                 "parameters": [
                     {
-                        "description": "Date Range",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.DateRangeRequest"
-                        }
+                        "type": "integer",
+                        "description": "Filter by year (e.g. 2024). If year and start both present, year wins.",
+                        "name": "year",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start date YYYY-MM-DD (use with end for date range)",
+                        "name": "start",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date YYYY-MM-DD (use with start for date range)",
+                        "name": "end",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -616,184 +585,33 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/statistics/products/year": {
-            "post": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin Statistics"
-                ],
-                "summary": "Get products statistics by year (admin only)",
-                "parameters": [
-                    {
-                        "description": "Year",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.YearRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/statistics.ProductStatistics"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/statistics/sales": {
+        "/admin/stats/sales": {
             "get": {
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Admin Statistics"
+                    "Admin Stats"
                 ],
-                "summary": "Get all sales statistics (admin only)",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/statistics.SalesStatistics"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/statistics/sales/date-range": {
-            "post": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin Statistics"
-                ],
-                "summary": "Get sales statistics by date range (admin only)",
+                "summary": "Get sales statistics (admin only)",
                 "parameters": [
                     {
-                        "description": "Date Range",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.DateRangeRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/statistics.SalesStatistics"
-                        }
+                        "type": "integer",
+                        "description": "Filter by year (e.g. 2024). If year and start both present, year wins.",
+                        "name": "year",
+                        "in": "query"
                     },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/statistics/sales/year": {
-            "post": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin Statistics"
-                ],
-                "summary": "Get sales statistics by year (admin only)",
-                "parameters": [
                     {
-                        "description": "Year",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.YearRequest"
-                        }
+                        "type": "string",
+                        "description": "Start date YYYY-MM-DD (use with end for date range)",
+                        "name": "start",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date YYYY-MM-DD (use with start for date range)",
+                        "name": "end",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -1801,21 +1619,6 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.DateRangeRequest": {
-            "type": "object",
-            "required": [
-                "end_date",
-                "start_date"
-            ],
-            "properties": {
-                "end_date": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                }
-            }
-        },
         "handlers.FindOrderByIDRequest": {
             "type": "object",
             "required": [
@@ -1921,17 +1724,6 @@ const docTemplate = `{
                 },
                 "phone": {
                     "type": "string"
-                }
-            }
-        },
-        "handlers.YearRequest": {
-            "type": "object",
-            "required": [
-                "year"
-            ],
-            "properties": {
-                "year": {
-                    "type": "integer"
                 }
             }
         },
