@@ -11,25 +11,31 @@ const (
 	StatusCancelled Status = "cancelled"
 )
 
-type Order struct {
-	ID        string
-	UserID    string
-	Items     []Item
-	Status    Status
-	CreatedAt time.Time
-	UpdatedAt time.Time
-}
-
 type Item struct {
 	ProductID string
 	Quantity  int64
+
+	UnitPrice float64
+	LineTotal float64
 }
 
-type CreateInput struct {
-	Items []Item
+type Order struct {
+	ID     string
+	UserID string
+	Items  []Item
+	Status Status
+
+	TotalPrice float64
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 type ListFilter struct {
 	Offset int64
 	Limit  int64
+}
+
+type CreateInput struct {
+	Items []Item
 }
