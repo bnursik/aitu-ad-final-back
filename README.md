@@ -1,576 +1,156 @@
-# AITU AD Final Backend
-
-A RESTful API backend built with Go, Gin framework, and MongoDB.
-
-## Getting Started
-
-### Prerequisites
-- Go 1.21+
-- MongoDB
-
-### Environment Variables
-
-Create a `.env` file in the root directory:
-
-```env
-MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/
-DB_NAME=your_database_name
-JWT_SECRET=your_jwt_secret
-PORT=8080
-```
-
-### Running the Application
-
-```bash
-go run cmd/api/main.go
-```
-
-### Testing MongoDB Connection
-
-```bash
-go run cmd/test/main.go
-```
-
----
-
-## API Documentation
-
-Base URL: `/api/v1`
-
-### Authentication
-
-All protected endpoints require a JWT token in the Authorization header:
-```
-Authorization: Bearer <token>
-```
-
----
-
-## Endpoints
-
-### Health Check
-
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| GET | `/health` | Check API health | No |
-
-**Response:**
-```json
-{"status": "ok"}
-```
-
----
-
-### Auth
-
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| POST | `/auth/register` | Register new user | No |
-| POST | `/auth/login` | Login user | No |
-| POST | `/admin/auth/admin/register` | Register new admin | Admin |
-
-#### Register User
-**POST** `/auth/register`
-
-**Request Body:**
-```json
-{
-  "name": "John Doe",
-  "email": "john@example.com",
-  "password": "password123"
-}
-```
-
-**Response (201):**
-```json
-{
-  "access_token": "eyJhbGciOiJIUzI1NiIs...",
-  "user": {
-    "id": "...",
-    "name": "John Doe",
-    "email": "john@example.com",
-    "role": "user"
-  }
-}
-```
-
-#### Login
-**POST** `/auth/login`
-
-**Request Body:**
-```json
-{
-  "email": "john@example.com",
-  "password": "password123"
-}
-```
-
-**Response (200):**
-```json
-{
-  "access_token": "eyJhbGciOiJIUzI1NiIs...",
-  "user": {
-    "id": "...",
-    "name": "John Doe",
-    "email": "john@example.com",
-    "role": "user"
-  }
-}
-```
-
-#### Register Admin
-**POST** `/admin/auth/admin/register`
-
-**Request Body:**
-```json
-{
-  "name": "Admin User",
-  "email": "admin@example.com",
-  "password": "adminpass123"
-}
-```
-
----
-
-### Categories
-
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| GET | `/categories` | List all categories | No |
-| GET | `/categories/:id` | Get category by ID | No |
-| POST | `/admin/categories` | Create category | Admin |
-| PUT | `/admin/categories/:id` | Update category | Admin |
-| DELETE | `/admin/categories/:id` | Delete category | Admin |
-
-#### List Categories
-**GET** `/categories`
-
-**Response (200):**
-```json
-[
-  {
-    "id": "...",
-    "name": "Electronics",
-    "description": "Electronic devices",
-    "createdAt": "2024-01-01T00:00:00Z",
-    "updatedAt": "2024-01-01T00:00:00Z"
-  }
-]
-```
-
-#### Get Category
-**GET** `/categories/:id`
-
-**Response (200):**
-```json
-{
-  "id": "...",
-  "name": "Electronics",
-  "description": "Electronic devices",
-  "createdAt": "2024-01-01T00:00:00Z",
-  "updatedAt": "2024-01-01T00:00:00Z"
-}
-```
-
-#### Create Category (Admin)
-**POST** `/admin/categories`
-
-**Request Body:**
-```json
-{
-  "name": "Electronics",
-  "description": "Electronic devices"
-}
-```
-
-#### Update Category (Admin)
-**PUT** `/admin/categories/:id`
-
-**Request Body:**
-```json
-{
-  "name": "Updated Name",
-  "description": "Updated description"
-}
-```
-
-#### Delete Category (Admin)
-**DELETE** `/admin/categories/:id`
-
-**Response:** `204 No Content`
-
----
-
-### Products
-
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| GET | `/products` | List all products | No |
-| GET | `/products/:id` | Get product by ID | No |
-| POST | `/admin/products` | Create product | Admin |
-| PUT | `/admin/products/:id` | Update product | Admin |
-| DELETE | `/admin/products/:id` | Delete product | Admin |
-
-#### List Products
-**GET** `/products`
-
-**Query Parameters:**
-- `categoryId` (optional): Filter by category ID
-
-**Response (200):**
-```json
-[
-  {
-    "id": "...",
-    "categoryId": "...",
-    "name": "iPhone 15",
-    "description": "Latest iPhone",
-    "price": 999.99,
-    "stock": 100,
-    "createdAt": "2024-01-01T00:00:00Z",
-    "updatedAt": "2024-01-01T00:00:00Z"
-  }
-]
-```
-
-#### Get Product
-**GET** `/products/:id`
-
-**Response (200):**
-```json
-{
-  "id": "...",
-  "categoryId": "...",
-  "name": "iPhone 15",
-  "description": "Latest iPhone",
-  "price": 999.99,
-  "stock": 100,
-  "createdAt": "2024-01-01T00:00:00Z",
-  "updatedAt": "2024-01-01T00:00:00Z",
-  "reviews": [
-    {
-      "id": "...",
-      "userId": "...",
-      "rating": 5,
-      "comment": "Great product!",
-      "createdAt": "2024-01-01T00:00:00Z"
-    }
-  ]
-}
-```
-
-#### Create Product (Admin)
-**POST** `/admin/products`
-
-**Request Body:**
-```json
-{
-  "categoryId": "...",
-  "name": "iPhone 15",
-  "description": "Latest iPhone",
-  "price": 999.99,
-  "stock": 100
-}
-```
-
-#### Update Product (Admin)
-**PUT** `/admin/products/:id`
-
-**Request Body:**
-```json
-{
-  "categoryId": "...",
-  "name": "iPhone 15 Pro",
-  "description": "Updated description",
-  "price": 1199.99,
-  "stock": 50
-}
-```
-
-#### Delete Product (Admin)
-**DELETE** `/admin/products/:id`
-
-**Response:** `204 No Content`
-
----
-
-### Product Reviews
-
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| POST | `/products/:id/reviews` | Add review | User |
-| DELETE | `/products/:id/reviews/:reviewId` | Delete review | User |
-
-#### Add Review
-**POST** `/products/:id/reviews`
-
-**Request Body:**
-```json
-{
-  "rating": 5,
-  "comment": "Great product!"
-}
-```
-
-**Response (201):**
-```json
-{
-  "id": "...",
-  "userId": "...",
-  "rating": 5,
-  "comment": "Great product!",
-  "createdAt": "2024-01-01T00:00:00Z"
-}
-```
-
-#### Delete Review
-**DELETE** `/products/:id/reviews/:reviewId`
-
-**Response:** `204 No Content`
-
----
-
-### Orders
-
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| GET | `/orders` | List orders (user: own, admin: all) | User/Admin |
-| GET | `/orders/:id` | Get order by ID | User/Admin |
-| POST | `/orders` | Create order | User |
-| PUT | `/admin/orders/:id/status` | Update order status | Admin |
-| POST | `/admin/orders/find` | Find order by ID | Admin |
-
-#### List Orders
-**GET** `/orders`
-
-**Response (200):**
-```json
-[
-  {
-    "id": "...",
-    "items": [
-      {
-        "productId": "...",
-        "quantity": 2
-      }
-    ],
-    "status": "pending",
-    "createdAt": "2024-01-01T00:00:00Z",
-    "updatedAt": "2024-01-01T00:00:00Z",
-    "userId": "..." // Only for admin
-  }
-]
-```
-
-#### Get Order
-**GET** `/orders/:id`
-
-**Response (200):**
-```json
-{
-  "id": "...",
-  "items": [
-    {
-      "productId": "...",
-      "quantity": 2
-    }
-  ],
-  "status": "pending",
-  "createdAt": "2024-01-01T00:00:00Z",
-  "updatedAt": "2024-01-01T00:00:00Z"
-}
-```
-
-#### Create Order
-**POST** `/orders`
-
-**Request Body:**
-```json
-{
-  "items": [
-    {
-      "productId": "...",
-      "quantity": 2
-    }
-  ]
-}
-```
-
-**Response (201):**
-```json
-{
-  "id": "...",
-  "items": [
-    {
-      "productId": "...",
-      "quantity": 2
-    }
-  ],
-  "status": "pending",
-  "createdAt": "2024-01-01T00:00:00Z",
-  "updatedAt": "2024-01-01T00:00:00Z"
-}
-```
-
-#### Update Order Status (Admin)
-**PUT** `/admin/orders/:id/status`
-
-**Request Body:**
-```json
-{
-  "status": "shipped"
-}
-```
-
-**Valid statuses:** `pending`, `shipped`, `delivered`, `cancelled`
-
-#### Find Order by ID (Admin)
-**POST** `/admin/orders/find`
-
-**Request Body:**
-```json
-{
-  "order_id": "..."
-}
-```
-
-**Response (200):**
-```json
-{
-  "id": "...",
-  "userId": "...",
-  "items": [...],
-  "status": "pending",
-  "createdAt": "2024-01-01T00:00:00Z",
-  "updatedAt": "2024-01-01T00:00:00Z"
-}
-```
-
----
-
-### Wishlist
-
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| GET | `/wishlist` | Get user's wishlist | User |
-| POST | `/wishlist` | Add product to wishlist | User |
-| DELETE | `/wishlist/:id` | Remove from wishlist | User |
-
-#### Get Wishlist
-**GET** `/wishlist`
-
-**Response (200):**
-```json
-[
-  {
-    "id": "...",
-    "productId": "...",
-    "createdAt": "2024-01-01T00:00:00Z"
-  }
-]
-```
-
-#### Add to Wishlist
-**POST** `/wishlist`
-
-**Request Body:**
-```json
-{
-  "product_id": "..."
-}
-```
-
-**Response (201):**
-```json
-{
-  "id": "...",
-  "productId": "...",
-  "createdAt": "2024-01-01T00:00:00Z"
-}
-```
-
-#### Remove from Wishlist
-**DELETE** `/wishlist/:id`
-
-**Response:** `204 No Content`
-
----
-
-### Stats (Admin Only)
-
-Two GET endpoints. Query params: **year** OR **start** & **end** (YYYY-MM-DD). If both **year** and **start** are provided, results are filtered by **year**.
-
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| GET | `/admin/stats/sales` | Sales statistics (no params = all; `year` or `start`+`end`) | Admin |
-| GET | `/admin/stats/products` | Products statistics (no params = all; `year` or `start`+`end`) | Admin |
-
-#### Get Sales Statistics
-**GET** `/admin/stats/sales`
-
-**Query params (optional):**
-- `year` — e.g. `2024` (takes precedence if both year and start are present)
-- `start` — start date `YYYY-MM-DD` (use with `end`)
-- `end` — end date `YYYY-MM-DD` (use with `start`)
-
-**Response (200):**
-```json
-{
-  "total_orders": 150,
-  "total_revenue": 25000.50,
-  "average_order": 166.67,
-  "pending_orders": 10,
-  "shipped_orders": 50,
-  "delivered_orders": 85,
-  "cancelled_orders": 5
-}
-```
-
-#### Get Products Statistics
-**GET** `/admin/stats/products`
-
-**Query params (optional):** same as sales — `year` OR `start` & `end`.
-
-**Response (200):**
-```json
-{
-  "total_products": 500,
-  "total_stock": 10000,
-  "out_of_stock": 15,
-  "total_reviews": 2500,
-  "average_rating": 4.2,
-  "total_categories": 25
-}
-```
-
----
-
-## Error Responses
-
-All error responses follow this format:
-
-```json
-{
-  "error": "error message"
-}
-```
-
-### Common HTTP Status Codes
-
-| Code | Description |
-|------|-------------|
-| 200 | Success |
-| 201 | Created |
-| 204 | No Content |
-| 400 | Bad Request |
-| 401 | Unauthorized |
-| 403 | Forbidden |
-| 404 | Not Found |
-| 409 | Conflict |
-| 500 | Internal Server Error |
-
----
-
-## Swagger Documentation
-
-Swagger UI is available at: `/swagger/index.html`
+# AITU AD Final Project
+
+Backend for an peripherals store, paired with a Vite/React/Tailwind frontend. The API is built with Go (Gin) and MongoDB, secured with JWT, and deployed to Railway; the frontend is deployed to Vercel.
+
+## Project Overview
+- Domain: catalog, product reviews, orders, wishlists, admin stats, and user profiles.
+- Auth: email/password with JWT, roles `user` and `admin` (middleware-enforced).
+- Deploy targets: Railway (backend), Vercel (frontend), MongoDB on Railway.
+- Docs: OpenAPI available at `/swagger/index.html` once the server is running (sources in `docs/swagger.yaml|json`).
+
+## System Architecture
+- **Frontend:** React (TypeScript) + Vite + Tailwind CSS; served from Vercel.
+- **Backend:** Go 1.21+, Gin router, layered domain → repository → service → handler.
+- **Database:** MongoDB (Atlas friendly). Collections: `users`, `products`, `categories`, `orders`, `wishlist`.
+- **Auth:** JWT with Bearer tokens; role-based guards for admin routes.
+- **Hosting/CI:** Railway for the API, Vercel for the SPA.
+
+## Database Schema (MongoDB)
+- `users`:
+  - `_id` ObjectId
+  - `name`, `email`, `password_hash`, `role` ("user"|"admin")
+  - `address`, `phone`, `bio`, `created_at`
+- `categories`:
+  - `_id`, `name`, `description`, `createdAt`, `updatedAt`
+- `products`:
+  - `_id`, `categoryId` (ObjectId), `name`, `description`, `price` (float), `stock` (int)
+  - `reviews` (embedded array): `_id`, `userId`, `rating`, `comment`, `createdAt`
+  - `createdAt`, `updatedAt`
+- `orders`:
+  - `_id`, `userId` (string), `items` [{`productId` ObjectId, `quantity` int}]
+  - `status` ("pending"|"shipped"|"delivered"|"cancelled")
+  - `createdAt`, `updatedAt`
+- `wishlist`:
+  - `_id`, `userId` (string), `productId` (ObjectId), `createdAt`
+
+## Representative MongoDB Queries
+- List products with paging and optional category filter:
+  ```js
+  db.products.find(
+    { ...(categoryId && { categoryId: ObjectId(categoryId) }) }
+  ).sort({ createdAt: -1 }).skip(offset).limit(limit)
+  ```
+- Add review to a product (embedded push):
+  ```js
+  db.products.updateOne(
+    { _id: ObjectId(productId) },
+    { $push: { reviews: { _id: ObjectId(), userId, rating, comment, createdAt: new Date() } } }
+  )
+  ```
+- Order status update:
+  ```js
+  db.orders.findOneAndUpdate(
+    { _id: ObjectId(orderId) },
+    { $set: { status, updatedAt: new Date() } },
+    { returnDocument: "after" }
+  )
+  ```
+- Sales statistics (aggregate excerpt):
+  ```js
+  db.orders.aggregate([
+    { $match: dateFilter },
+    { $facet: {
+        statusCounts: [{ $group: { _id: "$status", count: { $sum: 1 } } }],
+        totals: [
+          { $unwind: "$items" },
+          { $lookup: { from: "products", localField: "items.productId", foreignField: "_id", as: "product" } },
+          { $unwind: { path: "$product", preserveNullAndEmptyArrays: true } },
+          { $group: { _id: null,
+            totalOrders: { $addToSet: "$_id" },
+            totalRevenue: { $sum: { $multiply: [ "$items.quantity", { $ifNull: [ "$product.price", 0 ] } ] } }
+          }},
+          { $project: { totalOrders: { $size: "$totalOrders" }, totalRevenue: 1 } }
+        ]
+    }}
+  ])
+  ```
+- Wishlist uniqueness check (compound index):
+  ```js
+  db.wishlist.createIndex({ userId: 1, productId: 1 }, { unique: true })
+  ```
+
+## Indexing & Optimization Strategy
+- Unique index on `users.email` (`uniq_email`) to enforce unique accounts.
+- Compound unique index on `wishlist.userId + productId` to prevent duplicates.
+- Implicit `_id` indexes on all collections.
+- Queries sort by `createdAt` and use `skip/limit`; keep `createdAt` indexed if large datasets grow.
+- Aggregations reuse `$match` early to reduce pipeline volume; `$facet` used for combined stats in a single round trip.
+- Suggested future tuning: add `orders.userId` index for user-specific lists; add `products.categoryId` index to speed catalog filtering.
+
+## API Surface (v1)
+Base path: `/api/v1` (Swagger: `/swagger/index.html`)
+
+- **Health**
+  - `GET /health` — public
+
+- **Auth**
+  - `POST /auth/register` — public user signup
+  - `POST /auth/login` — public login
+  - `POST /admin/auth/register` — admin creates admin
+
+- **Categories (public + admin)**
+  - `GET /categories`
+  - `GET /categories/:id`
+  - `POST /admin/categories` — admin
+  - `PUT /admin/categories/:id` — admin
+  - `DELETE /admin/categories/:id` — admin
+
+- **Products**
+  - `GET /products`
+  - `GET /products/:id`
+  - `POST /products/:id/reviews` — auth user
+  - `DELETE /products/:id/reviews/:reviewId` — auth user
+  - `POST /admin/products` — admin
+  - `PUT /admin/products/:id` — admin
+  - `DELETE /admin/products/:id` — admin
+
+- **Orders**
+  - `POST /orders` — auth user
+  - `GET /orders` — auth user/admin (user gets own, admin sees all)
+  - `GET /orders/:id` — auth user/admin (own or any for admin)
+  - `PUT /admin/orders/:id/status` — admin
+  - `GET /admin/orders/:id` — admin
+  - `POST /admin/orders/find` — admin (lookup by id)
+
+- **Wishlist** (auth user)
+  - `POST /wishlist`
+  - `GET /wishlist`
+  - `DELETE /wishlist/:id`
+
+- **Profile** (auth user)
+  - `GET /profile`
+  - `PUT /profile`
+
+- **Admin stats**
+  - `GET /admin/stats/sales` — admin (query: `year` or `start`+`end`)
+  - `GET /admin/stats/products` — admin (same query pattern)
+
+- **Admin users**
+  - `GET /admin/users` — admin (list all users)
+
+Full contract and schemas: `/swagger/index.html` or `docs/swagger.yaml`.
+
+## Deployment Notes
+- Railway (prod backend): `https://aitu-ad-final-back-production.up.railway.app/api/v1`
+- Vercel (prod frontend/admin): `https://mangustad.vercel.app/admin/dashboard`
+- Railway service exposes the Gin server on `PORT`.
+- Env vars for Railway/Vercel must mirror `.env` keys; never commit secrets.
+- Frontend hits the backend base URL configured per environment; update the SPA env to match the current Railway URL.
+
+## Contributions
+- **Frontend**
+  - Nursultan: Admin pages with API handling — Orders v1, Products v1, Login, Register, Categories, OrderDetails, Stats v1.
+  - Birlik: User pages with API + styling — Catalog, ProductDetail, OrderList, OrderDetail, Wishlist, Profile, Landing page, Stats (Admin) v2, Orders (Admin) v2, AddAdmin.
+- **Backend**
+  - Nursultan: Authentication, Registration, Orders CRUD, Products CRUD, Categories CRUD.
+  - Birlik: AddAdmin, Wishlist CRUD, Profile, Product reviews, Get all users.
