@@ -93,6 +93,7 @@ func (h *OrdersHandler) List(c *gin.Context) {
 		Limit:  limit,
 	})
 	if err != nil {
+		log.Println("List orders error:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
 		return
 	}
@@ -131,7 +132,6 @@ func (h *OrdersHandler) Get(c *gin.Context) {
 	id := c.Param("id")
 	it, err := h.svc.Get(c.Request.Context(), id, uid, admin)
 	if err != nil {
-		log.Println("Get order error:", err)
 		switch {
 		case errors.Is(err, orders.ErrInvalidID):
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
