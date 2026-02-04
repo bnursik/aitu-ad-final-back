@@ -2,6 +2,7 @@ package orderssvc
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"time"
 
@@ -114,6 +115,20 @@ func (s *Service) Create(ctx context.Context, userID string, in orders.CreateInp
 		items = append(items, orders.Item{ProductID: p, Quantity: it.Quantity})
 	}
 
+	// Validate stock for all products before creating order
+	for _, it := range items {
+		prod, err := s.productsRepo.GetByID(ctx, it.ProductID)
+		if err != nil {
+			if errors.Is(err, products.ErrNotFound) {
+				return orders.Order{}, orders.ErrInvalidProduct
+			}
+			return orders.Order{}, err
+		}
+		if prod.Stock < it.Quantity {
+			return orders.Order{}, orders.ErrInsufficientStock
+		}
+	}
+
 	now := s.now()
 	o := orders.Order{
 		UserID:    uid,
@@ -122,7 +137,22 @@ func (s *Service) Create(ctx context.Context, userID string, in orders.CreateInp
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
-	return s.repo.Create(ctx, o)
+	ord, err := s.repo.Create(ctx, o)
+	if err != nil {
+		return orders.Order{}, err
+	}
+
+	// Decrement stock for each product in the order
+	for _, it := range ord.Items {
+		if err := s.productsRepo.DecrementStock(ctx, it.ProductID, it.Quantity); err != nil {
+			if errors.Is(err, products.ErrInsufficientStock) {
+				return orders.Order{}, orders.ErrInsufficientStock
+			}
+			return orders.Order{}, err
+		}
+	}
+
+	return ord, nil
 }
 
 func (s *Service) UpdateStatus(ctx context.Context, id string, status orders.Status) (orders.Order, error) {

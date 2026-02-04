@@ -286,6 +286,8 @@ func (h *ProductsHandler) Delete(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		case errors.Is(err, products.ErrNotFound):
 			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		case errors.Is(err, products.ErrCannotDeleteProduct):
+			c.JSON(http.StatusBadRequest, gin.H{"error": "cannot delete product with stock; stock must be less than 1"})
 		default:
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
 		}

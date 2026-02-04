@@ -9,6 +9,7 @@ type Repo interface {
 	Create(ctx context.Context, p Product) (Product, error)
 	Update(ctx context.Context, id string, in UpdateInput) (Product, error)
 	Delete(ctx context.Context, id string) error
+	DecrementStock(ctx context.Context, productID string, qty int64) error
 
 	AddReview(ctx context.Context, productID string, r Review) (Review, error)
 	DeleteReview(ctx context.Context, productID string, reviewID string) error

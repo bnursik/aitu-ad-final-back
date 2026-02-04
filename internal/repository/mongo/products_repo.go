@@ -172,12 +172,52 @@ func (r *ProductsRepo) Delete(ctx context.Context, id string) error {
 		return products.ErrInvalidID
 	}
 
-	res, err := r.col.DeleteOne(ctx, bson.M{"_id": oid})
+	filter := bson.M{"_id": oid, "stock": bson.M{"$lt": 1}}
+	res, err := r.col.DeleteOne(ctx, filter)
 	if err != nil {
 		return fmt.Errorf("delete product: %w", err)
 	}
 	if res.DeletedCount == 0 {
-		return products.ErrNotFound
+		n, err := r.col.CountDocuments(ctx, bson.M{"_id": oid})
+		if err != nil {
+			return fmt.Errorf("check product: %w", err)
+		}
+		if n == 0 {
+			return products.ErrNotFound
+		}
+		return products.ErrCannotDeleteProduct
+	}
+	return nil
+}
+
+func (r *ProductsRepo) DecrementStock(ctx context.Context, productID string, qty int64) error {
+	oid, err := primitive.ObjectIDFromHex(productID)
+	if err != nil {
+		return products.ErrInvalidID
+	}
+	if qty <= 0 {
+		return nil
+	}
+
+	res, err := r.col.UpdateOne(ctx,
+		bson.M{"_id": oid, "stock": bson.M{"$gte": qty}},
+		bson.M{
+			"$inc":  bson.M{"stock": -qty},
+			"$set":  bson.M{"updatedAt": time.Now().UTC()},
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("decrement stock: %w", err)
+	}
+	if res.MatchedCount == 0 {
+		n, err := r.col.CountDocuments(ctx, bson.M{"_id": oid})
+		if err != nil {
+			return fmt.Errorf("check product: %w", err)
+		}
+		if n == 0 {
+			return products.ErrNotFound
+		}
+		return products.ErrInsufficientStock
 	}
 	return nil
 }

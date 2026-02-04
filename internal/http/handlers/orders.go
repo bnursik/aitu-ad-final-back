@@ -184,6 +184,8 @@ func (h *OrdersHandler) Create(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid productId"})
 		case errors.Is(err, orders.ErrInvalidQty):
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid quantity"})
+		case errors.Is(err, orders.ErrInsufficientStock):
+			c.JSON(http.StatusBadRequest, gin.H{"error": "insufficient stock"})
 		default:
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
 		}
