@@ -60,6 +60,8 @@ func (h *WishlistHandler) Add(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid product_id"})
 		case errors.Is(err, wishlist.ErrAlreadyExists):
 			c.JSON(http.StatusConflict, gin.H{"error": "product already in wishlist"})
+		case errors.Is(err, wishlist.ErrProductOutOfStock):
+			c.JSON(http.StatusBadRequest, gin.H{"error": "cannot add product to wishlist: product is out of stock"})
 		default:
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
 		}

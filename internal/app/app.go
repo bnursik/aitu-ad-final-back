@@ -54,7 +54,7 @@ func Build(cfg *config.Config) (*Container, error) {
 
 	wishlistRepo := mongorepo.NewWishlistRepo(dbase)
 	_ = wishlistRepo.EnsureIndexes(context.Background())
-	wishlistSvc := wishlistsvc.New(wishlistRepo)
+	wishlistSvc := wishlistsvc.New(wishlistRepo, productsRepo)
 	wishlistHandler := handlers.NewWishlistHandler(wishlistSvc)
 
 	return &Container{

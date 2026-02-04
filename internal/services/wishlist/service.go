@@ -2,21 +2,25 @@ package wishlistsvc
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"time"
 
+	"github.com/bnursik/aitu-ad-final-back/internal/domain/products"
 	"github.com/bnursik/aitu-ad-final-back/internal/domain/wishlist"
 )
 
 type Service struct {
-	repo wishlist.Repo
-	now  func() time.Time
+	repo         wishlist.Repo
+	productsRepo products.Repo
+	now          func() time.Time
 }
 
-func New(repo wishlist.Repo) *Service {
+func New(repo wishlist.Repo, productsRepo products.Repo) *Service {
 	return &Service{
-		repo: repo,
-		now:  func() time.Time { return time.Now().UTC() },
+		repo:         repo,
+		productsRepo: productsRepo,
+		now:          func() time.Time { return time.Now().UTC() },
 	}
 }
 
@@ -31,6 +35,17 @@ func (s *Service) Add(ctx context.Context, userID string, in wishlist.AddItemInp
 	productID := strings.TrimSpace(in.ProductID)
 	if productID == "" {
 		return wishlist.WishlistItem{}, wishlist.ErrInvalidProduct
+	}
+
+	prod, err := s.productsRepo.GetByID(ctx, productID)
+	if err != nil {
+		if errors.Is(err, products.ErrNotFound) {
+			return wishlist.WishlistItem{}, wishlist.ErrInvalidProduct
+		}
+		return wishlist.WishlistItem{}, err
+	}
+	if prod.Stock < 1 {
+		return wishlist.WishlistItem{}, wishlist.ErrProductOutOfStock
 	}
 
 	item := wishlist.WishlistItem{
